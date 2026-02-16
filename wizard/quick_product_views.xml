@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Quick Add Menu Item Form -->
+    <record id="view_quick_product_form" model="ir.ui.view">
+        <field name="name">recipe.quick.product.form</field>
+        <field name="model">recipe.quick.product</field>
+        <field name="arch" type="xml">
+            <form string="Quick Add Menu Item">
+                <group>
+                    <group string="Basic Info">
+                        <field name="name" placeholder="e.g., Caesar Salad, Grilled Salmon"/>
+                        <field name="recipe_type"/>
+                        <field name="selling_price" widget="monetary"/>
+                        <field name="category_id"/>
+                        <field name="pos_categ_id"/>
+                    </group>
+                    <group string="Recipe">
+                        <field name="create_recipe"/>
+                        <field name="portion_size" invisible="not create_recipe"/>
+                    </group>
+                </group>
+                <group>
+                    <group string="Optional Info">
+                        <field name="description" placeholder="Short description for customers..."/>
+                        <field name="barcode"/>
+                        <field name="internal_reference"/>
+                    </group>
+                    <group string="Image">
+                        <field name="image" widget="image" class="oe_avatar"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_create_product" type="object"
+                            string="Create" class="btn-primary"/>
+                    <button name="action_create_and_new" type="object"
+                            string="Create &amp; New" class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Quick Add Menu Item Action -->
+    <record id="action_quick_product" model="ir.actions.act_window">
+        <field name="name">Quick Add Menu Item</field>
+        <field name="res_model">recipe.quick.product</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

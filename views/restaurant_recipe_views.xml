@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Recipe Form View -->
+    <record id="view_restaurant_recipe_form" model="ir.ui.view">
+        <field name="name">restaurant.recipe.form</field>
+        <field name="model">restaurant.recipe</field>
+        <field name="arch" type="xml">
+            <form string="Recipe">
+                <header>
+                    <button name="action_create_bom" type="object"
+                            string="Sync BOM" class="btn-primary"
+                            invisible="not ingredient_line_ids"/>
+                    <button name="action_update_product_cost" type="object"
+                            string="Update Product Cost" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_bom" type="object"
+                                class="oe_stat_button" icon="fa-cubes"
+                                invisible="not bom_id">
+                            <field name="bom_id" widget="statinfo" string="BOM"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Recipe Name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Product Info">
+                            <field name="product_id"/>
+                            <field name="recipe_type"/>
+                            <field name="portion_size"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="Cost Analysis">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_cost" widget="monetary"/>
+                            <field name="cost_per_portion" widget="monetary"/>
+                            <field name="selling_price" widget="monetary"/>
+                            <field name="food_cost_percentage" widget="percentage"/>
+                            <field name="profit_margin" widget="monetary"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Ingredients (BOM)" name="ingredients">
+                            <div class="alert alert-info" role="alert" invisible="bom_id">
+                                <strong>Tip:</strong> Add ingredients below. When you save, a Kit BOM will be automatically created.
+                                This BOM will consume ingredients from stock when the menu item is sold in POS.
+                            </div>
+                            <div class="alert alert-success" role="alert" invisible="not bom_id">
+                                <strong>BOM Active:</strong> Kit BOM is linked. Ingredients will be consumed from stock when this item is sold.
+                            </div>
+                            <field name="ingredient_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" context="{'default_is_ingredient': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="unit_cost" widget="monetary"/>
+                                    <field name="cost" widget="monetary" sum="Total"/>
+                                    <field name="available_qty"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="total_cost" widget="monetary" class="oe_subtotal_footer_separator"/>
+                            </group>
+                        </page>
+                        <page string="Preparation" name="preparation">
+                            <group>
+                                <group>
+                                    <field name="prep_time" widget="float_time"/>
+                                    <field name="cook_time" widget="float_time"/>
+                                </group>
+                            </group>
+                            <separator string="Instructions"/>
+                            <field name="instructions" placeholder="Enter preparation instructions..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Recipe List View -->
+    <record id="view_restaurant_recipe_list" model="ir.ui.view">
+        <field name="name">restaurant.recipe.list</field>
+        <field name="model">restaurant.recipe</field>
+        <field name="arch" type="xml">
+            <list string="Recipes">
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="recipe_type"/>
+                <field name="ingredient_count"/>
+                <field name="bom_id" string="BOM"/>
+                <field name="total_cost" widget="monetary"/>
+                <field name="cost_per_portion" widget="monetary"/>
+                <field name="selling_price" widget="monetary"/>
+                <field name="food_cost_percentage" widget="percentage"/>
+                <field name="profit_margin" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Recipe Search View -->
+    <record id="view_restaurant_recipe_search" model="ir.ui.view">
+        <field name="name">restaurant.recipe.search</field>
+        <field name="model">restaurant.recipe</field>
+        <field name="arch" type="xml">
+            <search string="Recipes">
+                <field name="name"/>
+                <field name="product_id"/>
+                <filter name="filter_dish" string="Dishes" domain="[('recipe_type', '=', 'dish')]"/>
+                <filter name="filter_drink" string="Beverages" domain="[('recipe_type', '=', 'drink')]"/>
+                <filter name="filter_dessert" string="Desserts" domain="[('recipe_type', '=', 'dessert')]"/>
+                <separator/>
+                <filter name="filter_has_bom" string="Has BOM" domain="[('bom_id', '!=', False)]"/>
+                <filter name="filter_no_bom" string="No BOM" domain="[('bom_id', '=', False)]"/>
+                <separator/>
+                <filter name="filter_high_cost" string="High Food Cost (>30%)" domain="[('food_cost_percentage', '>', 30)]"/>
+                <separator/>
+                <filter name="filter_archived" string="Archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_type" string="Type" context="{'group_by': 'recipe_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Recipe Actions -->
+    <record id="action_restaurant_recipe" model="ir.actions.act_window">
+        <field name="name">Recipes</field>
+        <field name="res_model">restaurant.recipe</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_restaurant_recipe_search"/>
+    </record>
+
+    <!-- Ingredients Action -->
+    <record id="action_restaurant_ingredients" model="ir.actions.act_window">
+        <field name="name">Ingredients</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('is_ingredient', '=', True)]</field>
+        <field name="context">{'default_is_ingredient': True, 'default_type': 'consu'}</field>
+    </record>
+
+</odoo>

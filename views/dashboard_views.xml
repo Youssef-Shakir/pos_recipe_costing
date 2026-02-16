@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Dashboard Form View -->
+    <record id="view_recipe_dashboard_form" model="ir.ui.view">
+        <field name="name">recipe.dashboard.form</field>
+        <field name="model">recipe.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Recipe Dashboard" create="false" edit="false" delete="false">
+                <sheet>
+                    <!-- Header with Title -->
+                    <div class="oe_title mb-4">
+                        <h1>Recipe &amp; Food Costing</h1>
+                        <h3 class="text-muted">Dashboard</h3>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            <div class="card bg-primary text-white text-center p-3">
+                                <h2><field name="recipe_count" readonly="1"/></h2>
+                                <span>Recipes</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-success text-white text-center p-3">
+                                <h2><field name="ingredient_count" readonly="1"/></h2>
+                                <span>Ingredients</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-info text-white text-center p-3">
+                                <h2><field name="pos_product_count" readonly="1"/></h2>
+                                <span>POS Items</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-warning text-dark text-center p-3">
+                                <h2><field name="products_without_recipe" readonly="1"/></h2>
+                                <span>No Recipe</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-secondary text-white text-center p-3">
+                                <h2><field name="avg_food_cost" readonly="1" widget="float" digits="[3,1]"/>%</h2>
+                                <span>Avg Food Cost</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-danger text-white text-center p-3">
+                                <h2><field name="low_margin_count" readonly="1"/></h2>
+                                <span>High Cost</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Section -->
+                    <div class="row">
+                        <!-- Left Column: Recipe Management -->
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <strong>Recipe Management</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button name="action_view_recipes" type="object"
+                                                class="btn btn-outline-primary btn-lg mb-2"
+                                                icon="fa-book">
+                                            View All Recipes
+                                        </button>
+                                        <button name="action_add_menu_item" type="object"
+                                                class="btn btn-primary btn-lg mb-2"
+                                                icon="fa-plus">
+                                            + New Menu Item &amp; Recipe
+                                        </button>
+                                        <button name="action_view_pos_products" type="object"
+                                                class="btn btn-outline-info btn-lg mb-2"
+                                                icon="fa-cutlery">
+                                            POS Products (Create Recipe)
+                                        </button>
+                                        <button name="action_products_without_recipe" type="object"
+                                                class="btn btn-outline-warning btn-lg mb-2"
+                                                icon="fa-exclamation-triangle">
+                                            Products Without Recipe
+                                        </button>
+                                        <button name="action_low_margin_recipes" type="object"
+                                                class="btn btn-outline-danger btn-lg"
+                                                icon="fa-warning">
+                                            High Food Cost Recipes
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Ingredients & Settings -->
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <strong>Ingredients</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button name="action_view_ingredients" type="object"
+                                                class="btn btn-outline-success btn-lg mb-2"
+                                                icon="fa-list">
+                                            View All Ingredients
+                                        </button>
+                                        <button name="action_add_ingredient" type="object"
+                                                class="btn btn-success btn-lg"
+                                                icon="fa-plus">
+                                            + New Ingredient
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-secondary text-white">
+                                    <strong>Manufacturing</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button name="action_view_boms" type="object"
+                                                class="btn btn-outline-secondary btn-lg"
+                                                icon="fa-cubes">
+                                            View Recipe BOMs
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header bg-dark text-white">
+                                    <strong>Configuration</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button name="action_open_settings" type="object"
+                                                class="btn btn-outline-dark btn-lg"
+                                                icon="fa-cog">
+                                            Settings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Dashboard Action -->
+    <record id="action_recipe_dashboard" model="ir.actions.act_window">
+        <field name="name">Recipe Dashboard</field>
+        <field name="res_model">recipe.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+</odoo>

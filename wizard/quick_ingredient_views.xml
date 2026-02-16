@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Quick Add Ingredient Form -->
+    <record id="view_quick_ingredient_form" model="ir.ui.view">
+        <field name="name">recipe.quick.ingredient.form</field>
+        <field name="model">recipe.quick.ingredient</field>
+        <field name="arch" type="xml">
+            <form string="Quick Add Ingredient">
+                <group>
+                    <group string="Basic Info">
+                        <field name="name" placeholder="e.g., Tomatoes, Olive Oil, Chicken Breast"/>
+                        <field name="ingredient_category"/>
+                        <field name="category_id"/>
+                    </group>
+                    <group string="Measurement">
+                        <field name="uom_id"/>
+                        <field name="uom_po_id"/>
+                        <field name="cost" widget="monetary"/>
+                    </group>
+                </group>
+                <group>
+                    <group string="Optional Info">
+                        <field name="supplier_id"/>
+                        <field name="barcode"/>
+                        <field name="internal_reference"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_create_ingredient" type="object"
+                            string="Create" class="btn-primary"/>
+                    <button name="action_create_and_new" type="object"
+                            string="Create &amp; New" class="btn-secondary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Quick Add Ingredient Action -->
+    <record id="action_quick_ingredient" model="ir.actions.act_window">
+        <field name="name">Quick Add Ingredient</field>
+        <field name="res_model">recipe.quick.ingredient</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

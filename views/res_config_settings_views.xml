@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add Recipe Settings to General Settings -->
+    <record id="res_config_settings_view_form_recipe" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.recipe</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Recipe &amp; Costing" string="Recipe &amp; Costing" name="pos_recipe_costing" groups="point_of_sale.group_pos_manager">
+                    <block title="Ingredient Defaults" name="ingredient_defaults">
+                        <setting string="Default Category" help="Product category for new ingredients">
+                            <field name="recipe_ingredient_category_id"/>
+                        </setting>
+                        <setting string="Expense Account (COGS)" help="Cost of Goods Sold account">
+                            <field name="recipe_ingredient_account_expense_id"/>
+                        </setting>
+                        <setting string="Stock Valuation Account" help="Inventory valuation account">
+                            <field name="recipe_ingredient_account_stock_valuation_id"/>
+                        </setting>
+                    </block>
+                    <block title="Menu Item Defaults" name="menu_item_defaults">
+                        <setting string="Default Category" help="Product category for menu items">
+                            <field name="recipe_product_category_id"/>
+                        </setting>
+                        <setting string="Income Account" help="Sales income account">
+                            <field name="recipe_product_account_income_id"/>
+                        </setting>
+                        <setting string="Default POS Category" help="POS category for new menu items">
+                            <field name="recipe_pos_category_id"/>
+                        </setting>
+                    </block>
+                    <block title="Cost Thresholds" name="cost_thresholds">
+                        <setting string="High Food Cost Warning" help="Recipes above this percentage will be flagged">
+                            <div class="content-group">
+                                <div class="row mt-2">
+                                    <label for="recipe_high_food_cost_threshold" class="col-lg-4"/>
+                                    <field name="recipe_high_food_cost_threshold" class="col-lg-2"/>
+                                    <span>%</span>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Settings Action -->
+    <record id="action_recipe_general_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'pos_recipe_costing'}</field>
+    </record>
+
+</odoo>

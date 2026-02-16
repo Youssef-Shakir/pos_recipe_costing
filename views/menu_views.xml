@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main App Menu - Dashboard is the main view -->
+    <menuitem id="menu_recipe_costing_root"
+              name="Recipe &amp; Costing"
+              action="action_recipe_dashboard"
+              sequence="35"
+              groups="point_of_sale.group_pos_user"/>
+
+</odoo>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extend Product Template Form -->
+    <record id="view_product_template_form_recipe" model="ir.ui.view">
+        <field name="name">product.template.form.recipe</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Add button box buttons -->
+            <div name="button_box" position="inside">
+                <button name="action_view_recipes" type="object"
+                        class="oe_stat_button" icon="fa-book"
+                        invisible="recipe_count == 0">
+                    <field name="recipe_count" widget="statinfo" string="Recipes"/>
+                </button>
+                <button name="action_view_used_in_recipes" type="object"
+                        class="oe_stat_button" icon="fa-cutlery"
+                        invisible="used_in_recipe_count == 0">
+                    <field name="used_in_recipe_count" widget="statinfo" string="Used In"/>
+                </button>
+            </div>
+
+            <!-- Add ingredient fields to General Information -->
+            <xpath expr="//page[@name='general_information']//group[@name='group_general']" position="inside">
+                <field name="is_ingredient"/>
+                <field name="ingredient_category" invisible="not is_ingredient"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- POS Products List with Recipe Actions -->
+    <record id="view_pos_product_recipe_list" model="ir.ui.view">
+        <field name="name">product.product.pos.recipe.list</field>
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list string="POS Menu Items" create="false">
+                <header>
+                    <button name="action_create_recipe_bulk" type="object"
+                            string="Create Recipes for Selected"/>
+                </header>
+                <field name="default_code" string="Ref" optional="show"/>
+                <field name="name" string="Product Name"/>
+                <field name="categ_id" string="Category" optional="show"/>
+                <field name="list_price" string="Sale Price" widget="monetary"/>
+                <field name="standard_price" string="Cost" widget="monetary" optional="show"/>
+                <field name="has_recipe" string="Has Recipe"/>
+                <field name="food_cost_percentage" string="Food Cost %" optional="show"/>
+                <field name="qty_available" string="On Hand" optional="show"/>
+                <button name="action_create_recipe" type="object"
+                        string="Create Recipe" icon="fa-plus-circle"
+                        class="btn-link"
+                        invisible="has_recipe"/>
+                <button name="action_view_recipes" type="object"
+                        string="View Recipe" icon="fa-book"
+                        class="btn-link"
+                        invisible="not has_recipe"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Ingredient List View -->
+    <record id="view_product_ingredient_list" model="ir.ui.view">
+        <field name="name">product.product.ingredient.list</field>
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list string="Ingredients">
+                <field name="default_code" string="Ref" optional="show"/>
+                <field name="name"/>
+                <field name="ingredient_category" optional="show"/>
+                <field name="standard_price" string="Cost" widget="monetary"/>
+                <field name="qty_available" string="On Hand"/>
+                <field name="uom_id" string="UoM"/>
+                <field name="used_in_recipe_count" string="Used In Recipes" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- POS Products Action -->
+    <record id="action_pos_products_recipe" model="ir.actions.act_window">
+        <field name="name">POS Menu Items</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_pos_product_recipe_list"/>
+        <field name="domain">[('available_in_pos', '=', True)]</field>
+        <field name="context">{'default_available_in_pos': True}</field>
+    </record>
+
+</odoo>
