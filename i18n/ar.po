@@ -1,0 +1,434 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * pos_recipe_costing
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__name
+msgid "Recipe Name"
+msgstr "اسم الوصفة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__product_id
+msgid "Menu Item"
+msgstr "عنصر القائمة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__recipe_type
+msgid "Recipe Type"
+msgstr "نوع الوصفة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__restaurant_recipe__recipe_type__dish
+msgid "Dish/Menu Item"
+msgstr "طبق/عنصر قائمة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__restaurant_recipe__recipe_type__drink
+msgid "Beverage"
+msgstr "مشروب"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__restaurant_recipe__recipe_type__dessert
+msgid "Dessert"
+msgstr "حلوى"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__restaurant_recipe__recipe_type__component
+msgid "Component/Sub-Recipe"
+msgstr "مكون/وصفة فرعية"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__portion_size
+msgid "Portions"
+msgstr "الحصص"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__ingredient_line_ids
+msgid "Ingredients"
+msgstr "المكونات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__total_cost
+msgid "Total Cost"
+msgstr "التكلفة الإجمالية"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__cost_per_portion
+msgid "Cost per Portion"
+msgstr "التكلفة لكل حصة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__selling_price
+msgid "Selling Price"
+msgstr "سعر البيع"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__food_cost_percentage
+msgid "Food Cost %"
+msgstr "نسبة تكلفة الطعام %"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__gross_profit
+msgid "Gross Profit"
+msgstr "الربح الإجمالي"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_restaurant_recipe__profit_margin
+msgid "Profit Margin %"
+msgstr "هامش الربح %"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_ingredient_line__product_id
+msgid "Ingredient"
+msgstr "المكون"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_ingredient_line__quantity
+msgid "Quantity"
+msgstr "الكمية"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_ingredient_line__uom_id
+msgid "Unit of Measure"
+msgstr "وحدة القياس"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_ingredient_line__unit_cost
+msgid "Unit Cost"
+msgstr "تكلفة الوحدة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_ingredient_line__line_cost
+msgid "Line Cost"
+msgstr "تكلفة السطر"
+
+#. module: pos_recipe_costing
+#: model:ir.model,name:pos_recipe_costing.model_restaurant_recipe
+msgid "Restaurant Recipe"
+msgstr "وصفة المطعم"
+
+#. module: pos_recipe_costing
+#: model:ir.model,name:pos_recipe_costing.model_recipe_ingredient_line
+msgid "Recipe Ingredient Line"
+msgstr "سطر مكون الوصفة"
+
+#. module: pos_recipe_costing
+#: model:ir.model,name:pos_recipe_costing.model_recipe_dashboard
+msgid "Recipe Dashboard"
+msgstr "لوحة تحكم الوصفات"
+
+#. module: pos_recipe_costing
+#: model:ir.model,name:pos_recipe_costing.model_recipe_quick_ingredient
+msgid "Quick Add Ingredient"
+msgstr "إضافة مكون سريع"
+
+#. module: pos_recipe_costing
+#: model:ir.model,name:pos_recipe_costing.model_recipe_quick_product
+msgid "Quick Add Menu Item"
+msgstr "إضافة عنصر قائمة سريع"
+
+#. module: pos_recipe_costing
+#: model:ir.actions.act_window,name:pos_recipe_costing.action_recipe_dashboard
+msgid "Recipe Dashboard"
+msgstr "لوحة تحكم الوصفات"
+
+#. module: pos_recipe_costing
+#: model:ir.ui.menu,name:pos_recipe_costing.menu_recipe_dashboard
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+#. module: pos_recipe_costing
+#: model:ir.ui.menu,name:pos_recipe_costing.menu_recipe_root
+msgid "Recipe Costing"
+msgstr "تكلفة الوصفات"
+
+#. module: pos_recipe_costing
+#: model:ir.ui.menu,name:pos_recipe_costing.menu_restaurant_recipe
+msgid "Recipes"
+msgstr "الوصفات"
+
+#. module: pos_recipe_costing
+#: model:ir.ui.menu,name:pos_recipe_costing.menu_recipe_ingredients
+msgid "Ingredients"
+msgstr "المكونات"
+
+#. module: pos_recipe_costing
+#: model_terms:ir.ui.view,arch_db:pos_recipe_costing.view_recipe_dashboard_form
+msgid "Recipe & Food Costing"
+msgstr "تكلفة الوصفات والطعام"
+
+#. module: pos_recipe_costing
+#: model_terms:ir.ui.view,arch_db:pos_recipe_costing.view_recipe_dashboard_form
+msgid "Manage recipes, ingredients, and food costs"
+msgstr "إدارة الوصفات والمكونات وتكاليف الطعام"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__recipe_count
+msgid "Recipes"
+msgstr "الوصفات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__ingredient_count
+msgid "Ingredients"
+msgstr "المكونات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__pos_product_count
+msgid "POS Items"
+msgstr "منتجات نقطة البيع"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__products_without_recipe
+msgid "No Recipe"
+msgstr "بدون وصفة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__avg_food_cost
+msgid "Avg Food Cost"
+msgstr "متوسط تكلفة الطعام"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_recipe_dashboard__low_margin_count
+msgid "High Cost"
+msgstr "تكلفة عالية"
+
+#. module: pos_recipe_costing
+msgid "New Menu Item"
+msgstr "منتج جديد"
+
+#. module: pos_recipe_costing
+msgid "New Ingredient"
+msgstr "مكون جديد"
+
+#. module: pos_recipe_costing
+msgid "View All Recipes"
+msgstr "عرض جميع الوصفات"
+
+#. module: pos_recipe_costing
+msgid "View All Ingredients"
+msgstr "عرض جميع المكونات"
+
+#. module: pos_recipe_costing
+msgid "POS Products"
+msgstr "منتجات نقطة البيع"
+
+#. module: pos_recipe_costing
+msgid "Products Without Recipe"
+msgstr "منتجات بدون وصفة"
+
+#. module: pos_recipe_costing
+msgid "High Food Cost Recipes"
+msgstr "وصفات بتكلفة طعام عالية"
+
+#. module: pos_recipe_costing
+msgid "View BOMs"
+msgstr "عرض قوائم المواد"
+
+#. module: pos_recipe_costing
+msgid "Recipe BOMs"
+msgstr "قوائم مواد الوصفات"
+
+#. module: pos_recipe_costing
+msgid "Settings"
+msgstr "الإعدادات"
+
+#. module: pos_recipe_costing
+msgid "Open Settings"
+msgstr "فتح الإعدادات"
+
+#. module: pos_recipe_costing
+msgid "Manufacturing"
+msgstr "التصنيع"
+
+#. module: pos_recipe_costing
+msgid "Configuration"
+msgstr "الإعدادات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_product_template__is_ingredient
+msgid "Is Ingredient"
+msgstr "هو مكون"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_product_template__ingredient_category
+msgid "Ingredient Type"
+msgstr "نوع المكون"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__protein
+msgid "Protein"
+msgstr "بروتين"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__vegetable
+msgid "Vegetable"
+msgstr "خضروات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__dairy
+msgid "Dairy"
+msgstr "ألبان"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__grain
+msgid "Grain/Starch"
+msgstr "حبوب/نشويات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__spice
+msgid "Spice/Seasoning"
+msgstr "توابل/بهارات"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__sauce
+msgid "Sauce/Condiment"
+msgstr "صلصة/توابل"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__beverage
+msgid "Beverage"
+msgstr "مشروب"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__packaging
+msgid "Packaging"
+msgstr "تغليف"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields.selection,name:pos_recipe_costing.selection__product_template__ingredient_category__other
+msgid "Other"
+msgstr "أخرى"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__name
+msgid "Ingredient Name"
+msgstr "اسم المكون"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__category_id
+msgid "Product Category"
+msgstr "فئة المنتج"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__cost
+msgid "Cost Price"
+msgstr "سعر التكلفة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__supplier_id
+msgid "Supplier"
+msgstr "المورد"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__barcode
+msgid "Barcode"
+msgstr "الباركود"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_ingredient__internal_reference
+msgid "Internal Reference"
+msgstr "المرجع الداخلي"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__name
+msgid "Menu Item Name"
+msgstr "اسم عنصر القائمة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__pos_categ_id
+msgid "POS Category"
+msgstr "فئة نقطة البيع"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__selling_price
+msgid "Selling Price"
+msgstr "سعر البيع"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__image
+msgid "Image"
+msgstr "الصورة"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__description
+msgid "Description"
+msgstr "الوصف"
+
+#. module: pos_recipe_costing
+#: model:ir.model.fields,field_description:pos_recipe_costing.field_quick_product__create_recipe
+msgid "Create Recipe"
+msgstr "إنشاء وصفة"
+
+#. module: pos_recipe_costing
+msgid "Ingredient Created"
+msgstr "تم إنشاء المكون"
+
+#. module: pos_recipe_costing
+msgid "Menu Item Created"
+msgstr "تم إنشاء عنصر القائمة"
+
+#. module: pos_recipe_costing
+msgid "Add Ingredients to Recipe"
+msgstr "إضافة مكونات للوصفة"
+
+#. module: pos_recipe_costing
+msgid "Quick Add Ingredient"
+msgstr "إضافة مكون سريع"
+
+#. module: pos_recipe_costing
+msgid "Quick Add Menu Item"
+msgstr "إضافة عنصر قائمة سريع"
+
+#. module: pos_recipe_costing
+msgid "Create & New"
+msgstr "إنشاء وجديد"
+
+#. module: pos_recipe_costing
+msgid "Create"
+msgstr "إنشاء"
+
+#. module: pos_recipe_costing
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: pos_recipe_costing
+msgid "Save"
+msgstr "حفظ"
+
+#. module: pos_recipe_costing
+msgid "Active"
+msgstr "نشط"
+
+#. module: pos_recipe_costing
+msgid "Notes"
+msgstr "ملاحظات"
+
+#. module: pos_recipe_costing
+msgid "Preparation Method"
+msgstr "طريقة التحضير"
+
+#. module: pos_recipe_costing
+msgid "Cost Analysis"
+msgstr "تحليل التكلفة"
+
+#. module: pos_recipe_costing
+msgid "Sync BOM"
+msgstr "مزامنة قائمة المواد"
+
+#. module: pos_recipe_costing
+msgid "View BOM"
+msgstr "عرض قائمة المواد"

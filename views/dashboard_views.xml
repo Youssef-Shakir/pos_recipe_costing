@@ -1,146 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Dashboard Form View -->
     <record id="view_recipe_dashboard_form" model="ir.ui.view">
         <field name="name">recipe.dashboard.form</field>
         <field name="model">recipe.dashboard</field>
         <field name="arch" type="xml">
             <form string="Recipe Dashboard" create="false" edit="false" delete="false">
                 <sheet>
-                    <!-- Header with Title -->
-                    <div class="oe_title mb-4">
-                        <h1>Recipe &amp; Food Costing</h1>
-                        <h3 class="text-muted">Dashboard</h3>
-                    </div>
+                    <div class="container-fluid">
+                        <div class="text-center mb-4 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
+                            <h1 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;">
+                                <i class="fa fa-utensils me-2"/>Recipe &amp; Food Costing
+                            </h1>
+                            <p class="text-white-50 mb-0" style="font-size: 1.1rem;">Manage recipes, ingredients, and food costs</p>
+                        </div>
 
-                    <!-- Statistics Cards -->
-                    <div class="row mb-4">
-                        <div class="col-md-2">
-                            <div class="card bg-primary text-white text-center p-3">
-                                <h2><field name="recipe_count" readonly="1"/></h2>
-                                <span>Recipes</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card bg-success text-white text-center p-3">
-                                <h2><field name="ingredient_count" readonly="1"/></h2>
-                                <span>Ingredients</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card bg-info text-white text-center p-3">
-                                <h2><field name="pos_product_count" readonly="1"/></h2>
-                                <span>POS Items</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card bg-warning text-dark text-center p-3">
-                                <h2><field name="products_without_recipe" readonly="1"/></h2>
-                                <span>No Recipe</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card bg-secondary text-white text-center p-3">
-                                <h2><field name="avg_food_cost" readonly="1" widget="float" digits="[3,1]"/>%</h2>
-                                <span>Avg Food Cost</span>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="card bg-danger text-white text-center p-3">
-                                <h2><field name="low_margin_count" readonly="1"/></h2>
-                                <span>High Cost</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions Section -->
-                    <div class="row">
-                        <!-- Left Column: Recipe Management -->
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-primary text-white">
-                                    <strong>Recipe Management</strong>
+                        <div class="row g-3 mb-4">
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102,126,234,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="recipe_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">Recipes / الوصفات</span>
                                 </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <button name="action_view_recipes" type="object"
-                                                class="btn btn-outline-primary btn-lg mb-2"
-                                                icon="fa-book">
-                                            View All Recipes
-                                        </button>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(17,153,142,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="ingredient_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">Ingredients / المكونات</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,114,255,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="pos_product_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">POS Items / المنتجات</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(245,87,108,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="products_without_recipe" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">No Recipe / بدون وصفة</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(79,172,254,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="avg_food_cost" readonly="1" widget="float" digits="[3,1]"/>%</h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">Avg Cost / متوسط التكلفة</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(255,65,108,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="low_margin_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">High Cost / تكلفة عالية</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-lg-4">
+                                <div class="h-100" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                    <div class="p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-book me-2"/>Recipes / الوصفات</h4>
+                                    </div>
+                                    <div class="p-3">
                                         <button name="action_add_menu_item" type="object"
-                                                class="btn btn-primary btn-lg mb-2"
-                                                icon="fa-plus">
-                                            + New Menu Item &amp; Recipe
+                                                class="btn w-100 mb-3 py-3"
+                                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 10px; box-shadow: 0 4px 15px rgba(102,126,234,0.4);">
+                                            <i class="fa fa-plus-circle me-2" style="font-size: 1.3rem;"/>
+                                            New Menu Item / منتج جديد
+                                        </button>
+                                        <button name="action_view_recipes" type="object"
+                                                class="btn btn-outline-primary w-100 mb-2 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-list me-2"/>View All Recipes / عرض الوصفات
                                         </button>
                                         <button name="action_view_pos_products" type="object"
-                                                class="btn btn-outline-info btn-lg mb-2"
-                                                icon="fa-cutlery">
-                                            POS Products (Create Recipe)
+                                                class="btn btn-outline-info w-100 mb-2 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-shopping-cart me-2"/>POS Products / منتجات نقطة البيع
                                         </button>
                                         <button name="action_products_without_recipe" type="object"
-                                                class="btn btn-outline-warning btn-lg mb-2"
-                                                icon="fa-exclamation-triangle">
-                                            Products Without Recipe
+                                                class="btn btn-outline-warning w-100 mb-2 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-exclamation-triangle me-2"/>Without Recipe / بدون وصفة
                                         </button>
                                         <button name="action_low_margin_recipes" type="object"
-                                                class="btn btn-outline-danger btn-lg"
-                                                icon="fa-warning">
-                                            High Food Cost Recipes
+                                                class="btn btn-outline-danger w-100 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-chart-line me-2"/>High Cost Recipes / تكلفة عالية
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Right Column: Ingredients & Settings -->
-                        <div class="col-md-6">
-                            <div class="card mb-3">
-                                <div class="card-header bg-success text-white">
-                                    <strong>Ingredients</strong>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <button name="action_view_ingredients" type="object"
-                                                class="btn btn-outline-success btn-lg mb-2"
-                                                icon="fa-list">
-                                            View All Ingredients
-                                        </button>
+                            <div class="col-lg-4">
+                                <div class="h-100" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                    <div class="p-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-leaf me-2"/>Ingredients / المكونات</h4>
+                                    </div>
+                                    <div class="p-3">
                                         <button name="action_add_ingredient" type="object"
-                                                class="btn btn-success btn-lg"
-                                                icon="fa-plus">
-                                            + New Ingredient
+                                                class="btn w-100 mb-3 py-3"
+                                                style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 10px; box-shadow: 0 4px 15px rgba(17,153,142,0.4);">
+                                            <i class="fa fa-plus-circle me-2" style="font-size: 1.3rem;"/>
+                                            New Ingredient / مكون جديد
+                                        </button>
+                                        <button name="action_view_ingredients" type="object"
+                                                class="btn btn-outline-success w-100 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-list me-2"/>View All Ingredients / عرض المكونات
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="card mb-3">
-                                <div class="card-header bg-secondary text-white">
-                                    <strong>Manufacturing</strong>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
+                            <div class="col-lg-4">
+                                <div class="mb-4" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                    <div class="p-3" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-industry me-2"/>Manufacturing / التصنيع</h4>
+                                    </div>
+                                    <div class="p-3">
                                         <button name="action_view_boms" type="object"
-                                                class="btn btn-outline-secondary btn-lg"
-                                                icon="fa-cubes">
-                                            View Recipe BOMs
+                                                class="btn btn-outline-primary w-100 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-cubes me-2"/>View BOMs / قوائم المواد
                                         </button>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="card">
-                                <div class="card-header bg-dark text-white">
-                                    <strong>Configuration</strong>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
+                                <div style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                    <div class="p-3" style="background: linear-gradient(135deg, #434343 0%, #000000 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-cog me-2"/>Settings / الإعدادات</h4>
+                                    </div>
+                                    <div class="p-3">
                                         <button name="action_open_settings" type="object"
-                                                class="btn btn-outline-dark btn-lg"
-                                                icon="fa-cog">
-                                            Settings
+                                                class="btn w-100 py-2"
+                                                style="background: linear-gradient(135deg, #434343 0%, #000000 100%); color: white; font-size: 1rem; border: none; border-radius: 8px;">
+                                            <i class="fa fa-cogs me-2"/>Open Settings / فتح الإعدادات
                                         </button>
                                     </div>
                                 </div>
@@ -152,7 +146,6 @@
         </field>
     </record>
 
-    <!-- Dashboard Action -->
     <record id="action_recipe_dashboard" model="ir.actions.act_window">
         <field name="name">Recipe Dashboard</field>
         <field name="res_model">recipe.dashboard</field>

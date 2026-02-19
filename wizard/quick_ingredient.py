@@ -62,7 +62,8 @@ class QuickIngredient(models.TransientModel):
 
         product_vals = {
             'name': self.name,
-            'type': 'product',  # Storable for stock tracking
+            'type': 'consu',
+            'is_storable': True,
             'is_ingredient': True,
             'ingredient_category': self.ingredient_category,
             'categ_id': self.category_id.id if self.category_id else self.env.ref('product.product_category_all').id,

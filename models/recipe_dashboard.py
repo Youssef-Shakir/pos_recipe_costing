@@ -54,7 +54,7 @@ class RecipeDashboard(models.Model):
             'res_model': 'product.product',
             'view_mode': 'list,form',
             'domain': [('is_ingredient', '=', True)],
-            'context': {'default_is_ingredient': True, 'default_type': 'product'},
+            'context': {'default_is_ingredient': True, 'default_type': 'consu', 'default_is_storable': True},
             'target': 'current',
         }
 

@@ -15,7 +15,8 @@ Recipe & Food Costing for Restaurants
 - POS products list with easy recipe creation
 - Integration with POS for seamless ordering
     """,
-    'author': 'Restaurant Solutions',
+    'author': 'Donialink, Yousif Shakir',
+    'website': 'https://www.donialink.com',
     'depends': ['point_of_sale', 'mrp', 'stock_account', 'uom'],
     'data': [
         'security/ir.model.access.csv',
