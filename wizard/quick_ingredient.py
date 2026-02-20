@@ -65,6 +65,7 @@ class QuickIngredient(models.TransientModel):
             'type': 'consu',
             'is_storable': True,
             'is_ingredient': True,
+            'available_in_pos': True,
             'ingredient_category': self.ingredient_category,
             'categ_id': self.category_id.id if self.category_id else self.env.ref('product.product_category_all').id,
             'uom_id': self.uom_id.id,

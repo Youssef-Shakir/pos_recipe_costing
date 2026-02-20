@@ -432,3 +432,111 @@ msgstr "مزامنة قائمة المواد"
 #. module: pos_recipe_costing
 msgid "View BOM"
 msgstr "عرض قائمة المواد"
+
+#. module: pos_recipe_costing
+msgid "Ingredient Stocktake"
+msgstr "جرد المكونات"
+
+#. module: pos_recipe_costing
+msgid "Stocktake"
+msgstr "الجرد"
+
+#. module: pos_recipe_costing
+msgid "New Stocktake"
+msgstr "جرد جديد"
+
+#. module: pos_recipe_costing
+msgid "View Stocktakes"
+msgstr "عرض الجرد"
+
+#. module: pos_recipe_costing
+msgid "Ingredient Stocktakes"
+msgstr "جرد المكونات"
+
+#. module: pos_recipe_costing
+msgid "Load All Ingredients"
+msgstr "تحميل جميع المكونات"
+
+#. module: pos_recipe_costing
+msgid "Start Counting"
+msgstr "بدء الجرد"
+
+#. module: pos_recipe_costing
+msgid "Validate"
+msgstr "تأكيد"
+
+#. module: pos_recipe_costing
+msgid "Reset to Draft"
+msgstr "إعادة للمسودة"
+
+#. module: pos_recipe_costing
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: pos_recipe_costing
+msgid "In Progress"
+msgstr "قيد التنفيذ"
+
+#. module: pos_recipe_costing
+msgid "Validated"
+msgstr "تم التأكيد"
+
+#. module: pos_recipe_costing
+msgid "Cancelled"
+msgstr "ملغي"
+
+#. module: pos_recipe_costing
+msgid "System Qty"
+msgstr "كمية النظام"
+
+#. module: pos_recipe_costing
+msgid "Counted Qty"
+msgstr "الكمية الفعلية"
+
+#. module: pos_recipe_costing
+msgid "Variance"
+msgstr "الفرق"
+
+#. module: pos_recipe_costing
+msgid "System Value"
+msgstr "قيمة النظام"
+
+#. module: pos_recipe_costing
+msgid "Counted Value"
+msgstr "القيمة الفعلية"
+
+#. module: pos_recipe_costing
+msgid "Variance Value"
+msgstr "قيمة الفرق"
+
+#. module: pos_recipe_costing
+msgid "Adjustment Account"
+msgstr "حساب التسوية"
+
+#. module: pos_recipe_costing
+msgid "Journal Entry"
+msgstr "قيد يومية"
+
+#. module: pos_recipe_costing
+msgid "Responsible"
+msgstr "المسؤول"
+
+#. module: pos_recipe_costing
+msgid "Count Lines"
+msgstr "سطور الجرد"
+
+#. module: pos_recipe_costing
+msgid "Items"
+msgstr "عناصر"
+
+#. module: pos_recipe_costing
+msgid "Variances"
+msgstr "فروقات"
+
+#. module: pos_recipe_costing
+msgid "System"
+msgstr "النظام"
+
+#. module: pos_recipe_costing
+msgid "Counted"
+msgstr "الفعلي"

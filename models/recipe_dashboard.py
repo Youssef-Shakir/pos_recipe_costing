@@ -20,20 +20,23 @@ class RecipeDashboard(models.Model):
         Recipe = self.env['restaurant.recipe']
         Product = self.env['product.product']
 
-        # Get threshold from settings
         ICP = self.env['ir.config_parameter'].sudo()
         threshold = float(ICP.get_param('pos_recipe_costing.high_food_cost_threshold', 35))
 
         recipes = Recipe.search([])
         ingredients = Product.search([('is_ingredient', '=', True)])
-        pos_products = Product.search([('available_in_pos', '=', True)])
+        # POS menu items = available in POS but NOT ingredients
+        pos_menu_items = Product.search([
+            ('available_in_pos', '=', True),
+            ('is_ingredient', '=', False)
+        ])
         products_with_recipe = recipes.mapped('product_id')
 
         for rec in self:
             rec.recipe_count = len(recipes)
             rec.ingredient_count = len(ingredients)
-            rec.pos_product_count = len(pos_products)
-            rec.products_without_recipe = len(pos_products - products_with_recipe)
+            rec.pos_product_count = len(pos_menu_items)
+            rec.products_without_recipe = len(pos_menu_items - products_with_recipe)
             rec.avg_food_cost = sum(recipes.mapped('food_cost_percentage')) / len(recipes) if recipes else 0
             rec.low_margin_count = len(recipes.filtered(lambda r: r.food_cost_percentage > threshold))
 
@@ -69,7 +72,7 @@ class RecipeDashboard(models.Model):
                 (self.env.ref('pos_recipe_costing.view_pos_product_recipe_list').id, 'list'),
                 (False, 'form'),
             ],
-            'domain': [('available_in_pos', '=', True)],
+            'domain': [('available_in_pos', '=', True), ('is_ingredient', '=', False)],
             'context': {'default_available_in_pos': True},
             'target': 'current',
         }
@@ -86,7 +89,11 @@ class RecipeDashboard(models.Model):
                 (self.env.ref('pos_recipe_costing.view_pos_product_recipe_list').id, 'list'),
                 (False, 'form'),
             ],
-            'domain': [('available_in_pos', '=', True), ('id', 'not in', products_with_recipe.ids)],
+            'domain': [
+                ('available_in_pos', '=', True),
+                ('is_ingredient', '=', False),
+                ('id', 'not in', products_with_recipe.ids)
+            ],
             'target': 'current',
         }
 
@@ -137,5 +144,23 @@ class RecipeDashboard(models.Model):
             'res_model': 'mrp.bom',
             'view_mode': 'list,form',
             'domain': [('code', 'like', 'RECIPE-')],
+            'target': 'current',
+        }
+
+    def action_new_stocktake(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('New Stocktake'),
+            'res_model': 'ingredient.stocktake',
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_view_stocktakes(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Ingredient Stocktakes'),
+            'res_model': 'ingredient.stocktake',
+            'view_mode': 'list,form',
             'target': 'current',
         }

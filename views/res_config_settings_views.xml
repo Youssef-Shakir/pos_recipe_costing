@@ -42,6 +42,14 @@
                             </div>
                         </setting>
                     </block>
+                    <block title="Stocktake Accounts / حسابات الجرد" name="stocktake_accounts">
+                        <setting string="Inventory Gain Account / حساب أرباح المخزون" help="Account for positive variances (counted > system)">
+                            <field name="stocktake_gain_account_id"/>
+                        </setting>
+                        <setting string="Inventory Loss Account / حساب خسائر المخزون" help="Account for negative variances (counted &lt; system)">
+                            <field name="stocktake_loss_account_id"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

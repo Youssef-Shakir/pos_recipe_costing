@@ -92,13 +92,13 @@
                             </div>
 
                             <div class="col-lg-4">
-                                <div class="h-100" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                <div class="mb-4" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
                                     <div class="p-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                                         <h4 class="text-white mb-0"><i class="fa fa-leaf me-2"/>Ingredients / المكونات</h4>
                                     </div>
                                     <div class="p-3">
                                         <button name="action_add_ingredient" type="object"
-                                                class="btn w-100 mb-3 py-3"
+                                                class="btn w-100 mb-2 py-3"
                                                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 10px; box-shadow: 0 4px 15px rgba(17,153,142,0.4);">
                                             <i class="fa fa-plus-circle me-2" style="font-size: 1.3rem;"/>
                                             New Ingredient / مكون جديد
@@ -107,6 +107,25 @@
                                                 class="btn btn-outline-success w-100 py-2"
                                                 style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
                                             <i class="fa fa-list me-2"/>View All Ingredients / عرض المكونات
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+                                    <div class="p-3" style="background: linear-gradient(135deg, #f5af19 0%, #f12711 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-clipboard-check me-2"/>Stocktake / الجرد</h4>
+                                    </div>
+                                    <div class="p-3">
+                                        <button name="action_new_stocktake" type="object"
+                                                class="btn w-100 mb-2 py-3"
+                                                style="background: linear-gradient(135deg, #f5af19 0%, #f12711 100%); color: white; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 10px; box-shadow: 0 4px 15px rgba(245,175,25,0.4);">
+                                            <i class="fa fa-plus-circle me-2" style="font-size: 1.3rem;"/>
+                                            New Stocktake / جرد جديد
+                                        </button>
+                                        <button name="action_view_stocktakes" type="object"
+                                                class="btn btn-outline-warning w-100 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-history me-2"/>View Stocktakes / عرض الجرد
                                         </button>
                                     </div>
                                 </div>

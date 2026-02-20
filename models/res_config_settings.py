@@ -55,3 +55,17 @@ class ResConfigSettings(models.TransientModel):
         default=35.0,
         help="Recipes above this food cost % will be flagged"
     )
+
+    # Stocktake Settings
+    stocktake_gain_account_id = fields.Many2one(
+        'account.account',
+        string='Inventory Gain Account',
+        config_parameter='pos_recipe_costing.stocktake_gain_account_id',
+        help="Account for inventory gains (when counted > system)"
+    )
+    stocktake_loss_account_id = fields.Many2one(
+        'account.account',
+        string='Inventory Loss Account',
+        config_parameter='pos_recipe_costing.stocktake_loss_account_id',
+        help="Account for inventory losses (when counted < system)"
+    )

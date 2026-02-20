@@ -1,11 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Main App Menu - Dashboard is the main view -->
     <menuitem id="menu_recipe_costing_root"
               name="Recipe &amp; Costing"
-              action="action_recipe_dashboard"
               sequence="35"
               groups="point_of_sale.group_pos_user"/>
+
+    <menuitem id="menu_recipe_dashboard"
+              name="Dashboard / لوحة التحكم"
+              parent="menu_recipe_costing_root"
+              action="action_recipe_dashboard"
+              sequence="1"/>
+
+    <menuitem id="menu_recipe_recipes"
+              name="Recipes / الوصفات"
+              parent="menu_recipe_costing_root"
+              action="action_restaurant_recipe"
+              sequence="10"/>
+
+    <menuitem id="menu_recipe_ingredients"
+              name="Ingredients / المكونات"
+              parent="menu_recipe_costing_root"
+              sequence="20"/>
+
+    <menuitem id="menu_ingredient_list"
+              name="All Ingredients / جميع المكونات"
+              parent="menu_recipe_ingredients"
+              action="action_restaurant_ingredients"
+              sequence="10"/>
+
+    <menuitem id="menu_ingredient_stocktake"
+              name="Stocktake / الجرد"
+              parent="menu_recipe_ingredients"
+              action="action_ingredient_stocktake"
+              sequence="20"/>
 
 </odoo>

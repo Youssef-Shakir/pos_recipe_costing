@@ -7,3 +7,7 @@ access_quick_ingredient_manager,recipe.quick.ingredient.manager,model_recipe_qui
 access_quick_product_manager,recipe.quick.product.manager,model_recipe_quick_product,point_of_sale.group_pos_manager,1,1,1,1
 access_recipe_dashboard_user,recipe.dashboard.user,model_recipe_dashboard,point_of_sale.group_pos_user,1,1,1,0
 access_recipe_dashboard_manager,recipe.dashboard.manager,model_recipe_dashboard,point_of_sale.group_pos_manager,1,1,1,1
+access_ingredient_stocktake_user,ingredient.stocktake.user,model_ingredient_stocktake,point_of_sale.group_pos_user,1,1,1,0
+access_ingredient_stocktake_manager,ingredient.stocktake.manager,model_ingredient_stocktake,point_of_sale.group_pos_manager,1,1,1,1
+access_ingredient_stocktake_line_user,ingredient.stocktake.line.user,model_ingredient_stocktake_line,point_of_sale.group_pos_user,1,1,1,0
+access_ingredient_stocktake_line_manager,ingredient.stocktake.line.manager,model_ingredient_stocktake_line,point_of_sale.group_pos_manager,1,1,1,1
