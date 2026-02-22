@@ -42,6 +42,19 @@ class QuickIngredient(models.TransientModel):
     )
     barcode = fields.Char(string='Barcode')
     internal_reference = fields.Char(string='Internal Reference')
+    pos_categ_id = fields.Many2one(
+        'pos.category',
+        string='POS Category',
+        default=lambda self: self._default_pos_category()
+    )
+
+    @api.model
+    def _default_pos_category(self):
+        ICP = self.env['ir.config_parameter'].sudo()
+        category_id = ICP.get_param('pos_recipe_costing.ingredient_pos_category_id')
+        if category_id:
+            return int(category_id)
+        return False
 
     @api.model
     def _default_category(self):
@@ -73,6 +86,7 @@ class QuickIngredient(models.TransientModel):
             'standard_price': self.cost,
             'barcode': self.barcode,
             'default_code': self.internal_reference,
+            'pos_categ_ids': [(6, 0, [self.pos_categ_id.id])] if self.pos_categ_id else False,
         }
 
         product = self.env['product.product'].create(product_vals)

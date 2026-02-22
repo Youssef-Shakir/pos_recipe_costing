@@ -26,6 +26,12 @@ class ResConfigSettings(models.TransientModel):
         domain="[('account_type', '=', 'asset_current')]",
         help="Default stock valuation account for ingredients"
     )
+    recipe_ingredient_pos_category_id = fields.Many2one(
+        'pos.category',
+        string='Ingredient POS Category',
+        config_parameter='pos_recipe_costing.ingredient_pos_category_id',
+        help="Default POS category for ingredients"
+    )
 
     # Final product defaults
     recipe_product_category_id = fields.Many2one(

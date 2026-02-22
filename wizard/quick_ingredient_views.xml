@@ -8,10 +8,11 @@
         <field name="arch" type="xml">
             <form string="Quick Add Ingredient">
                 <group>
-                    <group string="Basic Info">
+                    <group string="Basic Info / معلومات أساسية">
                         <field name="name" placeholder="e.g., Tomatoes, Olive Oil, Chicken Breast"/>
                         <field name="ingredient_category"/>
                         <field name="category_id"/>
+                        <field name="pos_categ_id"/>
                     </group>
                     <group string="Measurement">
                         <field name="uom_id"/>

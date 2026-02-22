@@ -83,9 +83,14 @@
                                             <i class="fa fa-exclamation-triangle me-2"/>Without Recipe / بدون وصفة
                                         </button>
                                         <button name="action_low_margin_recipes" type="object"
-                                                class="btn btn-outline-danger w-100 py-2"
+                                                class="btn btn-outline-danger w-100 mb-2 py-2"
                                                 style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
                                             <i class="fa fa-chart-line me-2"/>High Cost Recipes / تكلفة عالية
+                                        </button>
+                                        <button name="action_print_all_recipes" type="object"
+                                                class="btn w-100 py-2"
+                                                style="background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%); color: white; font-size: 1rem; border: none; border-radius: 8px;">
+                                            <i class="fa fa-file-pdf-o me-2"/>Print All Recipes / طباعة الوصفات
                                         </button>
                                     </div>
                                 </div>
@@ -165,12 +170,12 @@
         </field>
     </record>
 
-    <record id="action_recipe_dashboard" model="ir.actions.act_window">
+    <!-- Server action to open dashboard (ensures record exists) -->
+    <record id="action_recipe_dashboard_server" model="ir.actions.server">
         <field name="name">Recipe Dashboard</field>
-        <field name="res_model">recipe.dashboard</field>
-        <field name="view_mode">form</field>
-        <field name="target">current</field>
-        <field name="context">{'create': False}</field>
+        <field name="model_id" ref="model_recipe_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = env['recipe.dashboard'].action_open_dashboard()</field>
     </record>
 
 </odoo>

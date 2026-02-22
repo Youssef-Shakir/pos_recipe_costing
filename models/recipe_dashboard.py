@@ -8,6 +8,22 @@ class RecipeDashboard(models.Model):
 
     name = fields.Char(default='Dashboard')
 
+    @api.model
+    def action_open_dashboard(self):
+        """Open or create the dashboard singleton record"""
+        dashboard = self.search([], limit=1)
+        if not dashboard:
+            dashboard = self.create({'name': 'Recipe Dashboard'})
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Recipe Dashboard'),
+            'res_model': 'recipe.dashboard',
+            'view_mode': 'form',
+            'res_id': dashboard.id,
+            'target': 'current',
+            'context': {'create': False},
+        }
+
     # Statistics
     recipe_count = fields.Integer(compute='_compute_stats')
     ingredient_count = fields.Integer(compute='_compute_stats')
@@ -164,3 +180,10 @@ class RecipeDashboard(models.Model):
             'view_mode': 'list,form',
             'target': 'current',
         }
+
+    def action_print_all_recipes(self):
+        recipes = self.env['restaurant.recipe'].search([])
+        if not recipes:
+            from odoo.exceptions import UserError
+            raise UserError(_('No recipes found to print.'))
+        return self.env.ref('pos_recipe_costing.action_report_all_recipes').report_action(recipes)

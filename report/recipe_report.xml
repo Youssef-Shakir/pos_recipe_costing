@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Report Action -->
+    <record id="action_report_all_recipes" model="ir.actions.report">
+        <field name="name">All Recipes / جميع الوصفات</field>
+        <field name="model">restaurant.recipe</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pos_recipe_costing.report_all_recipes</field>
+        <field name="report_file">pos_recipe_costing.report_all_recipes</field>
+        <field name="print_report_name">'Recipes_Guide'</field>
+    </record>
+
+    <!-- Report Template -->
+    <template id="report_all_recipes">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <div class="text-center mb-3">
+                        <h2 style="margin-bottom: 5px;">Recipe Guide / دليل الوصفات</h2>
+                        <small class="text-muted"><t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/></small>
+                    </div>
+
+                    <div class="row" style="font-size: 9pt;">
+                        <t t-set="recipes_list" t-value="docs"/>
+                        <t t-set="col_size" t-value="(len(recipes_list) + 1) // 2"/>
+
+                        <t t-foreach="[recipes_list[:col_size], recipes_list[col_size:]]" t-as="column_recipes">
+                            <div class="col-6" style="padding: 0 8px;">
+                                <t t-foreach="column_recipes" t-as="recipe">
+                                    <div style="border: 1px solid #ddd; border-radius: 5px; padding: 6px 8px; margin-bottom: 6px; page-break-inside: avoid;">
+                                        <div style="border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 4px;">
+                                            <strong style="font-size: 10pt;"><t t-esc="recipe.name"/></strong>
+                                            <t t-if="recipe.product_id.list_price">
+                                                <span class="float-end text-muted" style="font-size: 8pt;">
+                                                    <t t-esc="'%.2f' % recipe.product_id.list_price"/> <t t-esc="recipe.currency_id.symbol"/>
+                                                </span>
+                                            </t>
+                                        </div>
+                                        <t t-if="recipe.ingredient_line_ids">
+                                            <ul style="margin: 0; padding-left: 15px; font-size: 8pt; line-height: 1.4;">
+                                                <t t-foreach="recipe.ingredient_line_ids" t-as="line">
+                                                    <li>
+                                                        <t t-esc="'%.2f' % line.quantity"/> <t t-esc="line.uom_id.name"/>
+                                                        <t t-esc="line.product_id.name"/>
+                                                    </li>
+                                                </t>
+                                            </ul>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted" style="font-size: 8pt;">No ingredients</span>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

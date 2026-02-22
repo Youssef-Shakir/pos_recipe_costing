@@ -9,7 +9,7 @@
     <menuitem id="menu_recipe_dashboard"
               name="Dashboard / لوحة التحكم"
               parent="menu_recipe_costing_root"
-              action="action_recipe_dashboard"
+              action="action_recipe_dashboard_server"
               sequence="1"/>
 
     <menuitem id="menu_recipe_recipes"

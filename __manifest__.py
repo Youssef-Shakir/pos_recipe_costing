@@ -21,6 +21,7 @@ Recipe & Food Costing for Restaurants
     'depends': ['point_of_sale', 'mrp', 'stock_account', 'uom', 'mail'],
     'data': [
         'security/ir.model.access.csv',
+        'report/recipe_report.xml',
         'views/ingredient_stocktake_views.xml',
         'wizard/quick_ingredient_views.xml',
         'wizard/quick_product_views.xml',
@@ -29,6 +30,7 @@ Recipe & Food Costing for Restaurants
         'views/product_views.xml',
         'views/res_config_settings_views.xml',
         'views/menu_views.xml',
+        'data/dashboard_data.xml',
     ],
     'assets': {},
     'license': 'LGPL-3',

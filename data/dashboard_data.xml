@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Create singleton dashboard record -->
+    <record id="recipe_dashboard_main" model="recipe.dashboard">
+        <field name="name">Recipe Dashboard</field>
+    </record>
+
+</odoo>

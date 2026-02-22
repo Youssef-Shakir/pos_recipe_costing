@@ -19,6 +19,9 @@
                         <setting string="Stock Valuation Account" help="Inventory valuation account">
                             <field name="recipe_ingredient_account_stock_valuation_id"/>
                         </setting>
+                        <setting string="Default POS Category / فئة نقطة البيع" help="POS category for ingredients">
+                            <field name="recipe_ingredient_pos_category_id"/>
+                        </setting>
                     </block>
                     <block title="Menu Item Defaults" name="menu_item_defaults">
                         <setting string="Default Category" help="Product category for menu items">
