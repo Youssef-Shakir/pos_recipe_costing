@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Recipe & Food Costing',
-    'version': '18.0.4.0.0',
+    'version': '18.0.4.1.0',
     'category': 'Point of Sale',
     'summary': 'Restaurant recipe management with BOM/kit integration, stocktaking, and COGS tracking',
     'description': """
@@ -33,6 +33,8 @@ Recipe & Food Costing for Restaurants
         'data/dashboard_data.xml',
     ],
     'assets': {},
+    'pre_init_hook': 'pre_init_hook',
+    'post_init_hook': 'post_init_hook',
     'license': 'LGPL-3',
     'installable': True,
     'application': True,
