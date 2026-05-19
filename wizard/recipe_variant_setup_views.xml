@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_recipe_variant_setup_form" model="ir.ui.view">
+        <field name="name">recipe.variant.setup.form</field>
+        <field name="model">recipe.variant.setup</field>
+        <field name="arch" type="xml">
+            <form string="Setup Recipes for Variants">
+                <sheet>
+                    <group>
+                        <group string="Product">
+                            <field name="product_tmpl_id"/>
+                            <field name="recipe_type"/>
+                            <field name="portion_size"/>
+                        </group>
+                        <group string="Variants to Create" invisible="not product_tmpl_id">
+                            <field name="selected_variant_ids"
+                                   nolabel="1"
+                                   widget="many2many_checkboxes"
+                                   domain="[('product_tmpl_id', '=', product_tmpl_id)]"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-warning mb-2" role="alert"
+                         invisible="not existing_recipe_variant_ids">
+                        <strong>Already have a recipe (skipped):</strong>
+                        <field name="existing_recipe_variant_ids"
+                               widget="many2many_tags" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <notebook>
+
+                        <!-- TAB 1: Base Ingredients -->
+                        <page string="Base Ingredients" name="base_ingredients">
+                            <div class="alert alert-info mb-2" role="alert">
+                                <strong>These go into every recipe created.</strong>
+                                Common items like espresso, water, syrup — anything all variants share.
+                            </div>
+                            <group>
+                                <field name="copy_from_recipe_id"
+                                       string="Load from Existing Recipe"
+                                       invisible="not product_tmpl_id"
+                                       domain="[('product_tmpl_id', '=', product_tmpl_id)]"
+                                       placeholder="Optional — copies ingredient list from an existing recipe"/>
+                            </group>
+                            <field name="ingredient_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id"
+                                           context="{'default_is_ingredient': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="unit_cost" readonly="1" optional="show"/>
+                                    <field name="cost" readonly="1" widget="monetary"
+                                           sum="Total" optional="show"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- TAB 2: Per-Attribute-Value Extras -->
+                        <page string="Variant-Specific Extras" name="extras"
+                              invisible="not product_tmpl_id">
+                            <div class="alert alert-info mb-2" role="alert">
+                                <strong>How this works:</strong>
+                                Each row says "whenever a variant has attribute value X, also add ingredient Y".
+                                You define rules once per attribute value — the system applies them automatically
+                                to every matching variant combination.
+                                <br/>
+                                <strong>Example for Latte:</strong>
+                                <ul class="mb-0">
+                                    <li>Oat Milk → add Oat Milk 150 ml</li>
+                                    <li>Almond Milk → add Almond Milk 150 ml</li>
+                                    <li>Double Shot → add Espresso Beans 18 g</li>
+                                    <li>Triple Shot → add Espresso Beans 27 g</li>
+                                    <li>Vanilla → add Vanilla Syrup 10 ml</li>
+                                    <li>Hazelnut → add Hazelnut Syrup 10 ml</li>
+                                </ul>
+                                A "Latte (Oat Milk, Double, Vanilla)" recipe will automatically get
+                                Oat Milk + extra beans + vanilla syrup on top of the base ingredients.
+                            </div>
+                            <field name="extra_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="attribute_id"
+                                           string="Attribute"
+                                           readonly="1"
+                                           optional="show"/>
+                                    <field name="attribute_value_id"
+                                           string="When Attribute Is"
+                                           domain="[('product_tmpl_id', '=', parent.product_tmpl_id)]"/>
+                                    <field name="product_id"
+                                           string="Add Ingredient"
+                                           context="{'default_is_ingredient': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="unit_cost" readonly="1" optional="show"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                    </notebook>
+                </sheet>
+
+                <footer>
+                    <button name="action_create_recipes" type="object"
+                            string="Create Recipes" class="btn-primary"
+                            invisible="selected_count == 0"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_recipe_variant_setup" model="ir.actions.act_window">
+        <field name="name">Setup Variant Recipes</field>
+        <field name="res_model">recipe.variant.setup</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

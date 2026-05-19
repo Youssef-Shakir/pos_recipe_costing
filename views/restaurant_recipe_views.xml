@@ -13,6 +13,10 @@
                             invisible="not ingredient_line_ids"/>
                     <button name="action_update_product_cost" type="object"
                             string="Update Product Cost" class="btn-secondary"/>
+                    <button name="action_open_variant_recipe_setup" type="object"
+                            string="Setup Variant Recipes" class="btn-secondary"
+                            invisible="not product_tmpl_id"
+                            title="Open wizard to create recipes for all variants of this product at once"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
@@ -22,6 +26,12 @@
                                 class="oe_stat_button" icon="fa-cubes"
                                 invisible="not bom_id">
                             <field name="bom_id" widget="statinfo" string="BOM"/>
+                        </button>
+                        <button name="action_view_variant_recipes" type="object"
+                                class="oe_stat_button" icon="fa-clone"
+                                invisible="variant_recipe_count == 0">
+                            <field name="variant_recipe_count" widget="statinfo"
+                                   string="Variant Recipes"/>
                         </button>
                     </div>
                     <div class="oe_title">
@@ -83,6 +93,27 @@
                             <separator string="Instructions"/>
                             <field name="instructions" placeholder="Enter preparation instructions..."/>
                         </page>
+
+                        <page string="Variant Recipes" name="variant_recipes"
+                              invisible="variant_recipe_count == 0">
+                            <div class="alert alert-info mb-2" role="alert">
+                                Other recipes for <strong><field name="product_tmpl_id" readonly="1" nolabel="1"/></strong>.
+                                Click any row to open and edit it.
+                            </div>
+                            <field name="variant_recipe_ids" nolabel="1" readonly="1">
+                                <list string="Variant Recipes">
+                                    <field name="name"/>
+                                    <field name="product_id" string="Variant"/>
+                                    <field name="ingredient_count" string="Ingredients"/>
+                                    <field name="total_cost" widget="monetary"/>
+                                    <field name="cost_per_portion" widget="monetary"/>
+                                    <field name="selling_price" widget="monetary"/>
+                                    <field name="food_cost_percentage" widget="percentage"/>
+                                    <field name="bom_id" string="BOM" optional="show"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -95,6 +126,10 @@
         <field name="model">restaurant.recipe</field>
         <field name="arch" type="xml">
             <list string="Recipes">
+                <header>
+                    <button name="action_open_variant_recipe_setup" type="object"
+                            string="Setup Variant Recipes"/>
+                </header>
                 <field name="name"/>
                 <field name="product_id"/>
                 <field name="recipe_type"/>

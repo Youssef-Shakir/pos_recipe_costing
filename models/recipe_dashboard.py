@@ -31,6 +31,8 @@ class RecipeDashboard(models.Model):
     products_without_recipe = fields.Integer(compute='_compute_stats')
     avg_food_cost = fields.Float(compute='_compute_stats')
     low_margin_count = fields.Integer(compute='_compute_stats')
+    variants_without_recipe_count = fields.Integer(compute='_compute_stats')
+    pos_template_count = fields.Integer(compute='_compute_stats')
 
     def _compute_stats(self):
         Recipe = self.env['restaurant.recipe']
@@ -41,20 +43,22 @@ class RecipeDashboard(models.Model):
 
         recipes = Recipe.search([])
         ingredients = Product.search([('is_ingredient', '=', True)])
-        # POS menu items = available in POS but NOT ingredients
         pos_menu_items = Product.search([
             ('available_in_pos', '=', True),
             ('is_ingredient', '=', False)
         ])
         products_with_recipe = recipes.mapped('product_id')
+        variants_without = pos_menu_items - products_with_recipe
 
         for rec in self:
             rec.recipe_count = len(recipes)
             rec.ingredient_count = len(ingredients)
             rec.pos_product_count = len(pos_menu_items)
-            rec.products_without_recipe = len(pos_menu_items - products_with_recipe)
+            rec.products_without_recipe = len(variants_without)
             rec.avg_food_cost = sum(recipes.mapped('food_cost_percentage')) / len(recipes) if recipes else 0
             rec.low_margin_count = len(recipes.filtered(lambda r: r.food_cost_percentage > threshold))
+            rec.variants_without_recipe_count = len(variants_without)
+            rec.pos_template_count = len(pos_menu_items.mapped('product_tmpl_id'))
 
     # Action methods
     def action_view_recipes(self):
@@ -187,3 +191,41 @@ class RecipeDashboard(models.Model):
             from odoo.exceptions import UserError
             raise UserError(_('No recipes found to print.'))
         return self.env.ref('pos_recipe_costing.action_report_all_recipes').report_action(recipes)
+
+    def action_setup_variant_recipes(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Setup Variant Recipes'),
+            'res_model': 'recipe.variant.setup',
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def action_view_attributes(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Product Attributes & Default Ingredients'),
+            'res_model': 'product.attribute',
+            'view_mode': 'list,form',
+            'target': 'current',
+        }
+
+    def action_variants_without_recipe(self):
+        Recipe = self.env['restaurant.recipe']
+        products_with_recipe_ids = Recipe.search([]).mapped('product_id').ids
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Variants Without a Recipe'),
+            'res_model': 'product.product',
+            'view_mode': 'list,form',
+            'views': [
+                (self.env.ref('pos_recipe_costing.view_pos_product_recipe_list').id, 'list'),
+                (False, 'form'),
+            ],
+            'domain': [
+                ('available_in_pos', '=', True),
+                ('is_ingredient', '=', False),
+                ('id', 'not in', products_with_recipe_ids),
+            ],
+            'target': 'current',
+        }

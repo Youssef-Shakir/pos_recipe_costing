@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add Default Ingredient column after the last price column in the attribute values list -->
+    <record id="view_product_attribute_form_recipe" model="ir.ui.view">
+        <field name="name">product.attribute.form.recipe</field>
+        <field name="model">product.attribute</field>
+        <field name="inherit_id" ref="product.product_attribute_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='value_ids']/list/field[@name='default_extra_price']"
+                   position="after">
+                <field name="default_ingredient_id"
+                       string="Default Ingredient"
+                       domain="[('is_ingredient', '=', True)]"
+                       optional="show"
+                       placeholder="e.g. Oat Milk product"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

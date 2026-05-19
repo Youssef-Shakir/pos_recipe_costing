@@ -16,40 +16,53 @@
                         </div>
 
                         <div class="row g-3 mb-4">
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(102,126,234,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="recipe_count" readonly="1"/></h2>
                                     <span class="text-white" style="font-size: 0.9rem;">Recipes / الوصفات</span>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(17,153,142,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="ingredient_count" readonly="1"/></h2>
                                     <span class="text-white" style="font-size: 0.9rem;">Ingredients / المكونات</span>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,114,255,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="pos_product_count" readonly="1"/></h2>
                                     <span class="text-white" style="font-size: 0.9rem;">POS Items / المنتجات</span>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(245,87,108,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="products_without_recipe" readonly="1"/></h2>
                                     <span class="text-white" style="font-size: 0.9rem;">No Recipe / بدون وصفة</span>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(79,172,254,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="avg_food_cost" readonly="1" widget="float" digits="[3,1]"/>%</h2>
                                     <span class="text-white" style="font-size: 0.9rem;">Avg Cost / متوسط التكلفة</span>
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-md-4 col-6">
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
                                 <div class="text-center p-3" style="background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(255,65,108,0.4);">
                                     <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="low_margin_count" readonly="1"/></h2>
                                     <span class="text-white" style="font-size: 0.9rem;">High Cost / تكلفة عالية</span>
+                                </div>
+                            </div>
+                            <!-- Variant stats -->
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(161,140,209,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="pos_template_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">Products / المنتجات الرئيسية</span>
+                                </div>
+                            </div>
+                            <div class="col-xl-2 col-lg-4 col-md-4 col-6">
+                                <div class="text-center p-3" style="background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(247,151,30,0.4);">
+                                    <h2 class="text-white mb-1" style="font-size: 2.5rem; font-weight: 700;"><field name="variants_without_recipe_count" readonly="1"/></h2>
+                                    <span class="text-white" style="font-size: 0.9rem;">Variants Missing Recipe</span>
                                 </div>
                             </div>
                         </div>
@@ -137,24 +150,42 @@
                             </div>
 
                             <div class="col-lg-4">
+                                <!-- Variants Panel -->
                                 <div class="mb-4" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
-                                    <div class="p-3" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);">
-                                        <h4 class="text-white mb-0"><i class="fa fa-industry me-2"/>Manufacturing / التصنيع</h4>
+                                    <div class="p-3" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);">
+                                        <h4 class="text-white mb-0"><i class="fa fa-clone me-2"/>Variants / المتغيرات</h4>
                                     </div>
                                     <div class="p-3">
-                                        <button name="action_view_boms" type="object"
-                                                class="btn btn-outline-primary w-100 py-2"
+                                        <button name="action_setup_variant_recipes" type="object"
+                                                class="btn w-100 mb-3 py-3"
+                                                style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; font-size: 1.1rem; font-weight: 600; border: none; border-radius: 10px; box-shadow: 0 4px 15px rgba(161,140,209,0.4);">
+                                            <i class="fa fa-magic me-2" style="font-size: 1.2rem;"/>
+                                            Setup Variant Recipes / إعداد وصفات المتغيرات
+                                        </button>
+                                        <button name="action_variants_without_recipe" type="object"
+                                                class="btn btn-outline-warning w-100 mb-2 py-2"
                                                 style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
-                                            <i class="fa fa-cubes me-2"/>View BOMs / قوائم المواد
+                                            <i class="fa fa-exclamation-circle me-2"/>Variants Without Recipe / متغيرات بدون وصفة
+                                        </button>
+                                        <button name="action_view_attributes" type="object"
+                                                class="btn btn-outline-secondary w-100 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-tags me-2"/>Attribute Defaults / إعدادات السمات
                                         </button>
                                     </div>
                                 </div>
 
+                                <!-- Manufacturing + Settings combined -->
                                 <div style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
                                     <div class="p-3" style="background: linear-gradient(135deg, #434343 0%, #000000 100%);">
-                                        <h4 class="text-white mb-0"><i class="fa fa-cog me-2"/>Settings / الإعدادات</h4>
+                                        <h4 class="text-white mb-0"><i class="fa fa-cog me-2"/>System / النظام</h4>
                                     </div>
                                     <div class="p-3">
+                                        <button name="action_view_boms" type="object"
+                                                class="btn btn-outline-primary w-100 mb-2 py-2"
+                                                style="font-size: 1rem; border-radius: 8px; border-width: 2px;">
+                                            <i class="fa fa-cubes me-2"/>View BOMs / قوائم المواد
+                                        </button>
                                         <button name="action_open_settings" type="object"
                                                 class="btn w-100 py-2"
                                                 style="background: linear-gradient(135deg, #434343 0%, #000000 100%); color: white; font-size: 1rem; border: none; border-radius: 8px;">

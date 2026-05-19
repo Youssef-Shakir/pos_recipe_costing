@@ -90,6 +90,17 @@ class RestaurantRecipe(models.Model):
     cook_time = fields.Float(string='Cook Time (mins)')
     instructions = fields.Html(string='Preparation Instructions')
 
+    # Linked variant recipes (other recipes for the same product template)
+    variant_recipe_ids = fields.Many2many(
+        'restaurant.recipe',
+        string='Other Variant Recipes',
+        compute='_compute_variant_recipes',
+    )
+    variant_recipe_count = fields.Integer(
+        string='Variant Recipes',
+        compute='_compute_variant_recipes',
+    )
+
     _sql_constraints = [
         ('product_unique', 'unique(product_id)', 'A recipe already exists for this product!')
     ]
@@ -118,6 +129,15 @@ class RestaurantRecipe(models.Model):
             else:
                 recipe.food_cost_percentage = 0
                 recipe.profit_margin = 0
+
+    @api.depends('product_tmpl_id', 'product_tmpl_id.recipe_ids')
+    def _compute_variant_recipes(self):
+        for recipe in self:
+            siblings = recipe.product_tmpl_id.recipe_ids.filtered(
+                lambda r: r.id != recipe._origin.id
+            )
+            recipe.variant_recipe_ids = siblings
+            recipe.variant_recipe_count = len(siblings)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -233,4 +253,36 @@ class RestaurantRecipe(models.Model):
                 'message': _('Product cost has been updated from recipe.'),
                 'type': 'success',
             }
+        }
+
+    def action_open_variant_recipe_setup(self):
+        """Open the variant recipe setup wizard.
+
+        Works from both the form (single record) and the list header (one or more selected).
+        Pre-fills the product template from the first selected record if available.
+        """
+        tmpl_id = self[:1].product_tmpl_id.id if self else False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Setup Variant Recipes'),
+            'res_model': 'recipe.variant.setup',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_product_tmpl_id': tmpl_id,
+            },
+        }
+
+    def action_view_variant_recipes(self):
+        self.ensure_one()
+        sibling_ids = self.product_tmpl_id.recipe_ids.filtered(
+            lambda r: r.id != self.id
+        ).ids
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Variant Recipes — %s') % self.product_tmpl_id.name,
+            'res_model': 'restaurant.recipe',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', sibling_ids)],
+            'target': 'current',
         }

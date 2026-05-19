@@ -19,6 +19,15 @@
                         invisible="used_in_recipe_count == 0">
                     <field name="used_in_recipe_count" widget="statinfo" string="Used In"/>
                 </button>
+                <button name="action_open_variant_recipe_setup" type="object"
+                        class="oe_stat_button" icon="fa-clone"
+                        invisible="not available_in_pos"
+                        title="Create recipes for all variants at once">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Setup Variant</span>
+                        <span class="o_stat_text">Recipes</span>
+                    </div>
+                </button>
             </div>
 
             <!-- Add ingredient fields to General Information -->
@@ -40,7 +49,7 @@
                             string="Create Recipes for Selected"/>
                 </header>
                 <field name="default_code" string="Ref" optional="show"/>
-                <field name="name" string="Product Name"/>
+                <field name="display_name" string="Product Name"/>
                 <field name="categ_id" string="Category" optional="show"/>
                 <field name="list_price" string="Sale Price" widget="monetary"/>
                 <field name="standard_price" string="Cost" widget="monetary" optional="show"/>

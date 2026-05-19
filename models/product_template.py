@@ -128,6 +128,17 @@ class ProductTemplate(models.Model):
             'domain': [('id', 'in', recipe_ids)],
         }
 
+    def action_open_variant_recipe_setup(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Setup Variant Recipes'),
+            'res_model': 'recipe.variant.setup',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_product_tmpl_id': self.id},
+        }
+
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'

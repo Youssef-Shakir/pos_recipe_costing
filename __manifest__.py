@@ -25,6 +25,8 @@ Recipe & Food Costing for Restaurants
         'views/ingredient_stocktake_views.xml',
         'wizard/quick_ingredient_views.xml',
         'wizard/quick_product_views.xml',
+        'wizard/recipe_variant_setup_views.xml',
+        'views/product_attribute_views.xml',
         'views/dashboard_views.xml',
         'views/restaurant_recipe_views.xml',
         'views/product_views.xml',
