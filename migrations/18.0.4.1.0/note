@@ -1,0 +1,5 @@
+UPDATE ir_ui_menu SET action = NULL WHERE action = 'ir.actions.act_window,637';
+
+
+
+run this on the production database if you got a null menu error after upgrading the module

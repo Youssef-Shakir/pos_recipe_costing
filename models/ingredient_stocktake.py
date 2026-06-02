@@ -185,21 +185,20 @@ class IngredientStocktake(models.Model):
         if not journal:
             raise UserError(_('No general journal found for posting adjustments.'))
 
-        total_variance = sum(lines_with_variance.mapped('variance_value'))
-
         move_lines = []
 
         for line in lines_with_variance:
-            if not line.product_id.categ_id.property_stock_valuation_account_id:
-                continue
-
-            stock_account = line.product_id.categ_id.property_stock_valuation_account_id
+            categ = line.product_id.categ_id
 
             if line.variance_value > 0:
-                # Gain: Debit Stock, Credit Gain Account
+                # Gain (counted > on hand): Debit Stock Interim Received (110200), Credit Gain Account
+                interim_received = categ.property_stock_account_input_categ_id
+                if not interim_received:
+                    raise UserError(_('Please configure Stock Interim (Received) account on product category "%s".') % categ.name)
+
                 move_lines.append((0, 0, {
                     'name': f"Stocktake gain: {line.product_id.name}",
-                    'account_id': stock_account.id,
+                    'account_id': interim_received.id,
                     'debit': abs(line.variance_value),
                     'credit': 0,
                 }))
@@ -210,7 +209,11 @@ class IngredientStocktake(models.Model):
                     'credit': abs(line.variance_value),
                 }))
             else:
-                # Loss: Debit Loss Account, Credit Stock
+                # Loss (counted < on hand): Debit Loss Account, Credit Stock Interim Delivered (110300)
+                interim_delivered = categ.property_stock_account_output_categ_id
+                if not interim_delivered:
+                    raise UserError(_('Please configure Stock Interim (Delivered) account on product category "%s".') % categ.name)
+
                 move_lines.append((0, 0, {
                     'name': f"Stocktake loss: {line.product_id.name}",
                     'account_id': self.loss_account_id.id,
@@ -219,7 +222,7 @@ class IngredientStocktake(models.Model):
                 }))
                 move_lines.append((0, 0, {
                     'name': f"Stocktake loss: {line.product_id.name}",
-                    'account_id': stock_account.id,
+                    'account_id': interim_delivered.id,
                     'debit': 0,
                     'credit': abs(line.variance_value),
                 }))
