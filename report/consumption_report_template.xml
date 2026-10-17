@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Report Action -->
+    <record id="action_report_consumption" model="ir.actions.report">
+        <field name="name">Ingredient Consumption Report</field>
+        <field name="model">consumption.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pos_recipe_costing.report_consumption_template</field>
+        <field name="report_file">pos_recipe_costing.report_consumption_template</field>
+        <field name="print_report_name">'Consumption_Report_%s_to_%s' % (object.date_from, object.date_to)</field>
+    </record>
+
+    <!-- Report Template -->
+    <template id="report_consumption_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="wizard">
+                <t t-set="report_data" t-value="wizard.get_report_data()"/>
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif;">
+
+                        <!-- Report Header -->
+                        <div class="text-center mb-4" style="border-bottom: 3px solid #667eea; padding-bottom: 15px;">
+                            <h1 style="color: #667eea; margin-bottom: 5px;">
+                                <i class="fa fa-chart-pie"/> Ingredient Consumption Report
+                            </h1>
+                            <h3 style="color: #666; margin: 0;">
+                                <t t-esc="report_data['date_from']"/> to <t t-esc="report_data['date_to']"/>
+                            </h3>
+                            <small class="text-muted">
+                                Generated: <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                            </small>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-4 text-center">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px;">
+                                    <h2 style="margin: 0; font-size: 2rem;">
+                                        <t t-esc="'%.2f' % report_data['total_value']"/>
+                                        <small><t t-esc="report_data['currency'].symbol"/></small>
+                                    </h2>
+                                    <p style="margin: 5px 0 0 0;">Total Consumption Value</p>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 15px; border-radius: 10px;">
+                                    <h2 style="margin: 0; font-size: 2rem;">
+                                        <t t-esc="report_data['total_ingredients']"/>
+                                    </h2>
+                                    <p style="margin: 5px 0 0 0;">Ingredients Consumed</p>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 10px;">
+                                    <h2 style="margin: 0; font-size: 2rem;">
+                                        <t t-esc="len(report_data['categories'])"/>
+                                    </h2>
+                                    <p style="margin: 5px 0 0 0;">Categories</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top 10 Most Consumed by Cost -->
+                        <div class="mb-4" style="page-break-inside: avoid;">
+                            <h3 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 5px;">
+                                <i class="fa fa-trophy"/> Top 10 Ingredients by Cost
+                            </h3>
+                            <table class="table table-sm table-striped" style="font-size: 10pt;">
+                                <thead style="background: #667eea; color: white;">
+                                    <tr>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 35%;">Ingredient</th>
+                                        <th style="width: 20%;">Category</th>
+                                        <th style="width: 15%;" class="text-end">Quantity</th>
+                                        <th style="width: 10%;">UoM</th>
+                                        <th style="width: 15%;" class="text-end">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report_data['top_10_by_cost']" t-as="item">
+                                        <tr>
+                                            <td><t t-esc="item_index + 1"/></td>
+                                            <td><strong><t t-esc="item['product_name']"/></strong></td>
+                                            <td><t t-esc="item['categ_name']"/></td>
+                                            <td class="text-end"><t t-esc="'%.2f' % item['qty_consumed']"/></td>
+                                            <td><t t-esc="item['uom_name']"/></td>
+                                            <td class="text-end">
+                                                <strong><t t-esc="'%.2f' % item['total_cost']"/> <t t-esc="report_data['currency'].symbol"/></strong>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Consumption by Category -->
+                        <div style="page-break-before: always;">
+                            <h3 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 5px;">
+                                <i class="fa fa-folder"/> Consumption by Category
+                            </h3>
+
+                            <t t-foreach="report_data['categories']" t-as="category">
+                                <div class="mb-3" style="page-break-inside: avoid;">
+                                    <div style="background: #f8f9fa; padding: 8px 12px; border-left: 4px solid #667eea; margin-bottom: 5px;">
+                                        <strong style="font-size: 11pt;"><t t-esc="category['name']"/></strong>
+                                        <span class="float-end" style="color: #667eea; font-weight: bold;">
+                                            <t t-esc="'%.2f' % category['total_cost']"/> <t t-esc="report_data['currency'].symbol"/>
+                                        </span>
+                                    </div>
+                                    <table class="table table-sm" style="font-size: 9pt; margin-bottom: 0;">
+                                        <thead style="background: #e9ecef;">
+                                            <tr>
+                                                <th style="width: 40%;">Ingredient</th>
+                                                <th style="width: 20%;" class="text-end">Quantity</th>
+                                                <th style="width: 15%;">UoM</th>
+                                                <th style="width: 25%;" class="text-end">Cost</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="category['items']" t-as="item">
+                                                <tr>
+                                                    <td><t t-esc="item['product_name']"/></td>
+                                                    <td class="text-end"><t t-esc="'%.2f' % item['qty_consumed']"/></td>
+                                                    <td><t t-esc="item['uom_name']"/></td>
+                                                    <td class="text-end"><t t-esc="'%.2f' % item['total_cost']"/> <t t-esc="report_data['currency'].symbol"/></td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Top 10 by Quantity -->
+                        <div class="mt-4" style="page-break-inside: avoid;">
+                            <h3 style="color: #11998e; border-bottom: 2px solid #11998e; padding-bottom: 5px;">
+                                <i class="fa fa-sort-amount-up"/> Top 10 Ingredients by Quantity
+                            </h3>
+                            <table class="table table-sm table-striped" style="font-size: 10pt;">
+                                <thead style="background: #11998e; color: white;">
+                                    <tr>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 40%;">Ingredient</th>
+                                        <th style="width: 20%;" class="text-end">Quantity</th>
+                                        <th style="width: 15%;">UoM</th>
+                                        <th style="width: 20%;" class="text-end">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="report_data['top_10_by_qty']" t-as="item">
+                                        <tr>
+                                            <td><t t-esc="item_index + 1"/></td>
+                                            <td><strong><t t-esc="item['product_name']"/></strong></td>
+                                            <td class="text-end"><strong><t t-esc="'%.2f' % item['qty_consumed']"/></strong></td>
+                                            <td><t t-esc="item['uom_name']"/></td>
+                                            <td class="text-end"><t t-esc="'%.2f' % item['total_cost']"/> <t t-esc="report_data['currency'].symbol"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="text-center mt-4 pt-3" style="border-top: 1px solid #ddd; font-size: 9pt; color: #666;">
+                            <p style="margin: 0;">
+                                Recipe &amp; Food Costing Module - Ingredient Consumption Report
+                            </p>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -17,6 +17,18 @@
                             string="Setup Variant Recipes" class="btn-secondary"
                             invisible="not product_tmpl_id"
                             title="Open wizard to create recipes for all variants of this product at once"/>
+                    <button name="action_open_variant_recipe_editor" type="object"
+                            string="Edit Variant Recipes" class="btn-secondary"
+                            invisible="not product_tmpl_id"
+                            title="Edit existing recipes for all variants"/>
+                    <button name="action_print_variant_recipes" type="object"
+                            string="Print Variant Recipes" class="btn-secondary"
+                            invisible="variant_recipe_count == 0"
+                            title="Print comparison report for all variant recipes"/>
+                    <button name="action_print_kitchen_cards" type="object"
+                            string="Print Kitchen Cards" class="btn-secondary"
+                            invisible="not ingredient_line_ids"
+                            title="Print large kitchen-friendly recipe cards"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
@@ -71,11 +83,17 @@
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id" context="{'default_is_ingredient': True}"/>
+                                    <field name="is_component" column_invisible="1"/>
                                     <field name="quantity"/>
                                     <field name="uom_id"/>
                                     <field name="unit_cost" widget="monetary"/>
                                     <field name="cost" widget="monetary" sum="Total"/>
                                     <field name="available_qty"/>
+                                    <button name="action_view_component_recipe" type="object"
+                                            icon="fa-external-link-square"
+                                            title="View Component Recipe"
+                                            invisible="not is_component"
+                                            class="btn-link"/>
                                     <field name="currency_id" column_invisible="1"/>
                                 </list>
                             </field>

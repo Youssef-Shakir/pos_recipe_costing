@@ -10,13 +10,14 @@
                 <group>
                     <group string="Basic Info">
                         <field name="name" placeholder="e.g., Caesar Salad, Grilled Salmon"/>
-                        <field name="recipe_type"/>
+                        <field name="production_type" widget="radio" options="{'horizontal': true}"/>
                         <field name="selling_price" widget="monetary"/>
                         <field name="category_id"/>
                         <field name="pos_categ_id"/>
                     </group>
-                    <group string="Recipe">
+                    <group string="Recipe" invisible="production_type == 'buy_sell'">
                         <field name="create_recipe"/>
+                        <field name="recipe_type" invisible="not create_recipe"/>
                         <field name="portion_size" invisible="not create_recipe"/>
                     </group>
                 </group>

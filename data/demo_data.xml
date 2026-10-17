@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ===================== -->
+        <!-- Ingredient Categories -->
+        <!-- ===================== -->
+        <record id="categ_protein" model="product.category">
+            <field name="name">Proteins</field>
+        </record>
+        <record id="categ_vegetables" model="product.category">
+            <field name="name">Vegetables</field>
+        </record>
+        <record id="categ_dairy" model="product.category">
+            <field name="name">Dairy</field>
+        </record>
+        <record id="categ_grains" model="product.category">
+            <field name="name">Grains &amp; Starches</field>
+        </record>
+        <record id="categ_spices" model="product.category">
+            <field name="name">Spices &amp; Seasonings</field>
+        </record>
+        <record id="categ_sauces" model="product.category">
+            <field name="name">Sauces &amp; Condiments</field>
+        </record>
+        <record id="categ_beverages" model="product.category">
+            <field name="name">Beverages</field>
+        </record>
+
+        <!-- ===================== -->
+        <!-- Sample Ingredients -->
+        <!-- ===================== -->
+
+        <!-- Proteins -->
+        <record id="ingredient_chicken_breast_tmpl" model="product.template">
+            <field name="name">Chicken Breast</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_protein"/>
+            <field name="standard_price">5.50</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">protein</field>
+        </record>
+        <record id="ingredient_beef_ground_tmpl" model="product.template">
+            <field name="name">Ground Beef</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_protein"/>
+            <field name="standard_price">8.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">protein</field>
+        </record>
+        <record id="ingredient_salmon_tmpl" model="product.template">
+            <field name="name">Salmon Fillet</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_protein"/>
+            <field name="standard_price">15.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">protein</field>
+        </record>
+
+        <!-- Vegetables -->
+        <record id="ingredient_tomato_tmpl" model="product.template">
+            <field name="name">Tomatoes</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_vegetables"/>
+            <field name="standard_price">2.50</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">vegetable</field>
+        </record>
+        <record id="ingredient_onion_tmpl" model="product.template">
+            <field name="name">Onions</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_vegetables"/>
+            <field name="standard_price">1.50</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">vegetable</field>
+        </record>
+        <record id="ingredient_lettuce_tmpl" model="product.template">
+            <field name="name">Lettuce</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_vegetables"/>
+            <field name="standard_price">1.80</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">vegetable</field>
+        </record>
+        <record id="ingredient_garlic_tmpl" model="product.template">
+            <field name="name">Garlic</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_vegetables"/>
+            <field name="standard_price">4.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">vegetable</field>
+        </record>
+
+        <!-- Dairy -->
+        <record id="ingredient_cheese_cheddar_tmpl" model="product.template">
+            <field name="name">Cheddar Cheese</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_dairy"/>
+            <field name="standard_price">12.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">dairy</field>
+        </record>
+        <record id="ingredient_milk_tmpl" model="product.template">
+            <field name="name">Whole Milk</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_dairy"/>
+            <field name="standard_price">1.50</field>
+            <field name="uom_id" ref="uom.product_uom_litre"/>
+            <field name="uom_po_id" ref="uom.product_uom_litre"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">dairy</field>
+        </record>
+        <record id="ingredient_butter_tmpl" model="product.template">
+            <field name="name">Butter</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_dairy"/>
+            <field name="standard_price">8.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">dairy</field>
+        </record>
+
+        <!-- Grains -->
+        <record id="ingredient_rice_tmpl" model="product.template">
+            <field name="name">Rice</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_grains"/>
+            <field name="standard_price">2.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">grain</field>
+        </record>
+        <record id="ingredient_pasta_tmpl" model="product.template">
+            <field name="name">Pasta</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_grains"/>
+            <field name="standard_price">1.80</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">grain</field>
+        </record>
+        <record id="ingredient_bread_tmpl" model="product.template">
+            <field name="name">Burger Buns</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_grains"/>
+            <field name="standard_price">3.00</field>
+            <field name="uom_id" ref="uom.product_uom_dozen"/>
+            <field name="uom_po_id" ref="uom.product_uom_dozen"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">grain</field>
+        </record>
+
+        <!-- Spices -->
+        <record id="ingredient_salt_tmpl" model="product.template">
+            <field name="name">Salt</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_spices"/>
+            <field name="standard_price">1.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">spice</field>
+        </record>
+        <record id="ingredient_pepper_tmpl" model="product.template">
+            <field name="name">Black Pepper</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_spices"/>
+            <field name="standard_price">15.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">spice</field>
+        </record>
+        <record id="ingredient_paprika_tmpl" model="product.template">
+            <field name="name">Paprika</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_spices"/>
+            <field name="standard_price">12.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">spice</field>
+        </record>
+
+        <!-- Sauces -->
+        <record id="ingredient_olive_oil_tmpl" model="product.template">
+            <field name="name">Olive Oil</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_sauces"/>
+            <field name="standard_price">10.00</field>
+            <field name="uom_id" ref="uom.product_uom_litre"/>
+            <field name="uom_po_id" ref="uom.product_uom_litre"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">sauce</field>
+        </record>
+        <record id="ingredient_ketchup_tmpl" model="product.template">
+            <field name="name">Ketchup</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_sauces"/>
+            <field name="standard_price">3.50</field>
+            <field name="uom_id" ref="uom.product_uom_litre"/>
+            <field name="uom_po_id" ref="uom.product_uom_litre"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">sauce</field>
+        </record>
+        <record id="ingredient_mayo_tmpl" model="product.template">
+            <field name="name">Mayonnaise</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_sauces"/>
+            <field name="standard_price">4.00</field>
+            <field name="uom_id" ref="uom.product_uom_litre"/>
+            <field name="uom_po_id" ref="uom.product_uom_litre"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">sauce</field>
+        </record>
+
+        <!-- Beverages -->
+        <record id="ingredient_coffee_beans_tmpl" model="product.template">
+            <field name="name">Coffee Beans</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_beverages"/>
+            <field name="standard_price">20.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">beverage</field>
+        </record>
+        <record id="ingredient_orange_juice_tmpl" model="product.template">
+            <field name="name">Orange Juice</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="categ_id" ref="categ_beverages"/>
+            <field name="standard_price">3.00</field>
+            <field name="uom_id" ref="uom.product_uom_litre"/>
+            <field name="uom_po_id" ref="uom.product_uom_litre"/>
+            <field name="is_ingredient">True</field>
+            <field name="ingredient_category">beverage</field>
+        </record>
+
+        <!-- ===================== -->
+        <!-- Menu Items (Products) -->
+        <!-- ===================== -->
+        <record id="menu_classic_burger_tmpl" model="product.template">
+            <field name="name">Classic Burger</field>
+            <field name="type">consu</field>
+            <field name="list_price">12.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="production_type">kitchen</field>
+        </record>
+        <record id="menu_chicken_pasta_tmpl" model="product.template">
+            <field name="name">Chicken Pasta</field>
+            <field name="type">consu</field>
+            <field name="list_price">15.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="production_type">kitchen</field>
+        </record>
+        <record id="menu_salmon_rice_tmpl" model="product.template">
+            <field name="name">Grilled Salmon with Rice</field>
+            <field name="type">consu</field>
+            <field name="list_price">22.00</field>
+            <field name="available_in_pos">True</field>
+            <field name="production_type">kitchen</field>
+        </record>
+        <record id="menu_cappuccino_tmpl" model="product.template">
+            <field name="name">Cappuccino</field>
+            <field name="type">consu</field>
+            <field name="list_price">4.50</field>
+            <field name="available_in_pos">True</field>
+            <field name="production_type">kitchen</field>
+        </record>
+
+        <!-- ===================== -->
+        <!-- Component/Sub-Recipe (Sauce) -->
+        <!-- ===================== -->
+        <record id="component_burger_sauce_tmpl" model="product.template">
+            <field name="name">Special Burger Sauce</field>
+            <field name="type">consu</field>
+            <field name="standard_price">0.50</field>
+            <field name="is_ingredient">True</field>
+            <field name="production_type">component</field>
+            <field name="ingredient_category">component</field>
+        </record>
+
+    </data>
+</odoo>

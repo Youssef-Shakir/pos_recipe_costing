@@ -75,3 +75,12 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='pos_recipe_costing.stocktake_loss_account_id',
         help="Account for inventory losses (when counted < system)"
     )
+
+    # Waste Tracking Settings
+    waste_account_id = fields.Many2one(
+        'account.account',
+        string='Waste Expense Account',
+        config_parameter='pos_recipe_costing.waste_account_id',
+        domain="[('account_type', 'in', ['expense', 'expense_direct_cost'])]",
+        help="Account for recording ingredient waste expenses (expired, spoiled, damaged)"
+    )

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class RestaurantRecipe(models.Model):
@@ -105,6 +106,22 @@ class RestaurantRecipe(models.Model):
         ('product_unique', 'unique(product_id)', 'A recipe already exists for this product!')
     ]
 
+    # Cost history
+    cost_history_count = fields.Integer(
+        string='Cost History Count',
+        compute='_compute_cost_history_count'
+    )
+    # Store previous cost for tracking changes
+    _previous_cost_per_portion = fields.Float(copy=False)
+    _previous_portion_size = fields.Float(copy=False)
+
+    def _compute_cost_history_count(self):
+        CostHistory = self.env['recipe.cost.history']
+        for recipe in self:
+            recipe.cost_history_count = CostHistory.search_count([
+                ('recipe_id', '=', recipe.id)
+            ])
+
     @api.depends('ingredient_line_ids')
     def _compute_ingredient_count(self):
         for recipe in self:
@@ -145,15 +162,106 @@ class RestaurantRecipe(models.Model):
         for record in records:
             if record.ingredient_line_ids:
                 record._sync_bom()
+            # Store initial values for tracking
+            record._previous_cost_per_portion = record.cost_per_portion
+            record._previous_portion_size = record.portion_size
         return records
 
     def write(self, vals):
+        # Capture old values before write for cost history tracking
+        old_values = {}
+        track_cost = 'ingredient_line_ids' in vals or 'portion_size' in vals
+        if track_cost:
+            for record in self:
+                old_values[record.id] = {
+                    'cost_per_portion': record.cost_per_portion,
+                    'portion_size': record.portion_size,
+                    'food_cost_percentage': record.food_cost_percentage,
+                }
+
         res = super().write(vals)
+
         # Sync BOM if ingredients or product changed
         if 'ingredient_line_ids' in vals or 'product_id' in vals or 'portion_size' in vals:
             for record in self:
                 record._sync_bom()
+
+        # Track cost changes
+        if track_cost:
+            self._track_cost_changes(vals, old_values)
+
         return res
+
+    def _track_cost_changes(self, vals, old_values):
+        """Track recipe cost changes and create history records."""
+        CostHistory = self.env['recipe.cost.history']
+
+        # Determine trigger
+        if 'portion_size' in vals:
+            trigger = 'portion_change'
+        elif 'ingredient_line_ids' in vals:
+            trigger = 'recipe_edit'
+        else:
+            trigger = 'ingredient_change'
+
+        for record in self:
+            old_data = old_values.get(record.id, {})
+            old_cost = old_data.get('cost_per_portion', 0)
+            new_cost = record.cost_per_portion
+
+            # Only create history if cost actually changed
+            if float_compare(old_cost, new_cost, precision_digits=4) != 0:
+                CostHistory.create({
+                    'recipe_id': record.id,
+                    'old_cost': old_cost,
+                    'new_cost': new_cost,
+                    'trigger': trigger,
+                    'old_portion_size': old_data.get('portion_size', record.portion_size),
+                    'new_portion_size': record.portion_size,
+                    'old_food_cost_percentage': old_data.get('food_cost_percentage', 0),
+                    'new_food_cost_percentage': record.food_cost_percentage,
+                    'changed_by': self.env.user.id,
+                })
+
+    def _trigger_cost_history_from_ingredient(self, ingredient_product_ids):
+        """Called when ingredient prices change to track recipe cost impact.
+
+        This method should be called from ingredient.cost.history or
+        product write to propagate cost changes to affected recipes.
+        """
+        CostHistory = self.env['recipe.cost.history']
+        RecipeLine = self.env['recipe.ingredient.line']
+
+        # Find recipes using these ingredients
+        lines = RecipeLine.search([
+            ('product_id', 'in', ingredient_product_ids)
+        ])
+        recipe_ids = lines.mapped('recipe_id').ids
+
+        for recipe in self.browse(recipe_ids):
+            # Get the stored previous cost
+            old_cost = recipe._previous_cost_per_portion or 0
+
+            # Recompute costs
+            recipe._compute_total_cost()
+            recipe._compute_costs()
+            new_cost = recipe.cost_per_portion
+
+            if float_compare(old_cost, new_cost, precision_digits=4) != 0:
+                CostHistory.create({
+                    'recipe_id': recipe.id,
+                    'old_cost': old_cost,
+                    'new_cost': new_cost,
+                    'trigger': 'ingredient_change',
+                    'old_portion_size': recipe.portion_size,
+                    'new_portion_size': recipe.portion_size,
+                    'old_food_cost_percentage': (old_cost / recipe.selling_price * 100) if recipe.selling_price else 0,
+                    'new_food_cost_percentage': recipe.food_cost_percentage,
+                    'notes': _('Triggered by ingredient price change'),
+                })
+
+                # Update stored cost
+                recipe._previous_cost_per_portion = new_cost
 
     def unlink(self):
         # Delete associated BOMs
@@ -273,6 +381,23 @@ class RestaurantRecipe(models.Model):
             },
         }
 
+    def action_open_variant_recipe_editor(self):
+        """Open the variant recipe editor wizard.
+
+        Allows editing existing recipes for all variants of a product template.
+        """
+        tmpl_id = self[:1].product_tmpl_id.id if self else False
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Edit Variant Recipes'),
+            'res_model': 'recipe.variant.editor',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_product_tmpl_id': tmpl_id,
+            },
+        }
+
     def action_view_variant_recipes(self):
         self.ensure_one()
         sibling_ids = self.product_tmpl_id.recipe_ids.filtered(
@@ -286,3 +411,67 @@ class RestaurantRecipe(models.Model):
             'domain': [('id', 'in', sibling_ids)],
             'target': 'current',
         }
+
+    def action_view_cost_history(self):
+        """View cost history for this recipe."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Cost History - %s') % self.name,
+            'res_model': 'recipe.cost.history',
+            'view_mode': 'list,graph,pivot',
+            'domain': [('recipe_id', '=', self.id)],
+            'context': {'default_recipe_id': self.id},
+        }
+
+    def get_cost_trend(self, days=30):
+        """Get the cost trend for this recipe."""
+        self.ensure_one()
+        return self.env['recipe.cost.history'].get_recipe_trend(self.id, days)
+
+    def action_print_variant_recipes(self):
+        """Print all variant recipes for the same product template.
+
+        This action prints a comprehensive comparison report showing all
+        variant recipes, highlighting common and unique ingredients.
+        """
+        self.ensure_one()
+        if not self.product_tmpl_id:
+            raise UserError(_('No product template linked to this recipe.'))
+
+        # Get all recipes for this product template
+        all_recipes = self.product_tmpl_id.recipe_ids
+        if not all_recipes:
+            raise UserError(_('No recipes found for this product template.'))
+
+        # Return the report action for the product template
+        return self.env.ref(
+            'pos_recipe_costing.action_report_variant_recipes'
+        ).report_action(self.product_tmpl_id)
+
+    def action_print_kitchen_cards(self):
+        """Print kitchen-friendly recipe cards for all variants.
+
+        Generates large, easy-to-read recipe cards suitable for kitchen use.
+        """
+        self.ensure_one()
+        if not self.product_tmpl_id:
+            raise UserError(_('No product template linked to this recipe.'))
+
+        return self.env.ref(
+            'pos_recipe_costing.action_report_variant_recipes_kitchen'
+        ).report_action(self.product_tmpl_id)
+
+    def get_variant_comparison_data(self):
+        """Get comparison data for all variant recipes of the same product template.
+
+        Returns a dictionary containing:
+        - common_ingredients: List of ingredients present in ALL variants with same quantity
+        - unique_ingredients: Dict mapping recipe_id to list of unique ingredients
+        - all_ingredients: List of all ingredients with variant presence info
+        - quantity_differences: Ingredients with different quantities across variants
+
+        This method is called from the report template.
+        """
+        self.ensure_one()
+        return self.product_tmpl_id._get_variant_comparison_data()

@@ -28,10 +28,38 @@
                         <span class="o_stat_text">Recipes</span>
                     </div>
                 </button>
+                <button name="action_open_variant_recipe_editor" type="object"
+                        class="oe_stat_button" icon="fa-edit"
+                        invisible="recipe_count == 0"
+                        title="Edit existing variant recipes">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Edit Variant</span>
+                        <span class="o_stat_text">Recipes</span>
+                    </div>
+                </button>
+                <button name="action_print_variant_recipes" type="object"
+                        class="oe_stat_button" icon="fa-print"
+                        invisible="recipe_count == 0"
+                        title="Print variant recipe comparison report">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Print Variant</span>
+                        <span class="o_stat_text">Recipes</span>
+                    </div>
+                </button>
+                <button name="action_print_kitchen_cards" type="object"
+                        class="oe_stat_button" icon="fa-file-text-o"
+                        invisible="recipe_count == 0"
+                        title="Print kitchen recipe cards">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Kitchen</span>
+                        <span class="o_stat_text">Cards</span>
+                    </div>
+                </button>
             </div>
 
-            <!-- Add ingredient fields to General Information -->
+            <!-- Add ingredient and production fields to General Information -->
             <xpath expr="//page[@name='general_information']//group[@name='group_general']" position="inside">
+                <field name="production_type" invisible="not available_in_pos"/>
                 <field name="is_ingredient"/>
                 <field name="ingredient_category" invisible="not is_ingredient"/>
             </xpath>
@@ -51,6 +79,10 @@
                 <field name="default_code" string="Ref" optional="show"/>
                 <field name="display_name" string="Product Name"/>
                 <field name="categ_id" string="Category" optional="show"/>
+                <field name="production_type" string="Type" optional="show"
+                       decoration-success="production_type == 'kitchen'"
+                       decoration-info="production_type == 'buy_sell'"
+                       decoration-warning="production_type == 'component'"/>
                 <field name="list_price" string="Sale Price" widget="monetary"/>
                 <field name="standard_price" string="Cost" widget="monetary" optional="show"/>
                 <field name="has_recipe" string="Has Recipe"/>
@@ -59,7 +91,7 @@
                 <button name="action_create_recipe" type="object"
                         string="Create Recipe" icon="fa-plus-circle"
                         class="btn-link"
-                        invisible="has_recipe"/>
+                        invisible="has_recipe or production_type == 'buy_sell'"/>
                 <button name="action_view_recipes" type="object"
                         string="View Recipe" icon="fa-book"
                         class="btn-link"
@@ -95,6 +127,84 @@
         <field name="view_id" ref="view_pos_product_recipe_list"/>
         <field name="domain">[('available_in_pos', '=', True)]</field>
         <field name="context">{'default_available_in_pos': True}</field>
+    </record>
+
+    <!-- Alias for menu -->
+    <record id="action_pos_products_list" model="ir.actions.act_window">
+        <field name="name">POS Products</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_pos_product_recipe_list"/>
+        <field name="domain">[('available_in_pos', '=', True)]</field>
+        <field name="context">{'default_available_in_pos': True}</field>
+    </record>
+
+    <!-- Components (Sub-Recipes) Action -->
+    <record id="action_restaurant_components" model="ir.actions.act_window">
+        <field name="name">Components / Sub-Recipes</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_product_ingredient_list"/>
+        <field name="domain">[('production_type', '=', 'component')]</field>
+        <field name="context">{'default_production_type': 'component', 'default_is_ingredient': True}</field>
+    </record>
+
+    <!-- Ingredient Categories Action -->
+    <record id="action_ingredient_categories" model="ir.actions.act_window">
+        <field name="name">Ingredient Categories</field>
+        <field name="res_model">product.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Products Without Recipe Action -->
+    <record id="action_products_without_recipe" model="ir.actions.act_window">
+        <field name="name">Products Without Recipe</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_pos_product_recipe_list"/>
+        <field name="domain">[('available_in_pos', '=', True), ('has_recipe', '=', False), ('production_type', '=', 'kitchen')]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All kitchen products have recipes!
+            </p>
+        </field>
+    </record>
+
+    <!-- High Cost Recipes Action -->
+    <record id="action_high_cost_recipes" model="ir.actions.act_window">
+        <field name="name">High Cost Items</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_pos_product_recipe_list"/>
+        <field name="domain">[('available_in_pos', '=', True), ('has_recipe', '=', True), ('food_cost_percentage', '>', 35)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No high cost items found!
+            </p>
+            <p>Items with food cost above 35% will appear here.</p>
+        </field>
+    </record>
+
+    <!-- BOM List Action (for recipes) -->
+    <record id="action_recipe_bom_list" model="ir.actions.act_window">
+        <field name="name">Recipe BOMs</field>
+        <field name="res_model">mrp.bom</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('type', '=', 'phantom')]</field>
+        <field name="context">{'default_type': 'phantom'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No BOMs found
+            </p>
+            <p>BOMs (Bills of Materials) are automatically created for recipes to track ingredient consumption.</p>
+        </field>
+    </record>
+
+    <!-- Product Attributes Action -->
+    <record id="action_product_attribute_recipe" model="ir.actions.act_window">
+        <field name="name">Product Attributes</field>
+        <field name="res_model">product.attribute</field>
+        <field name="view_mode">list,form</field>
     </record>
 
 </odoo>

@@ -15,12 +15,17 @@ class RecipeIngredientLine(models.Model):
     )
     sequence = fields.Integer(string='Sequence', default=10)
 
-    # Ingredient product
+    # Ingredient product (can be raw ingredient or component/sub-recipe)
     product_id = fields.Many2one(
         'product.product',
         string='Ingredient',
         required=True,
-        domain="[('is_ingredient', '=', True)]"
+        domain="['|', ('is_ingredient', '=', True), ('is_component', '=', True)]"
+    )
+    is_component = fields.Boolean(
+        related='product_id.is_component',
+        string='Is Component',
+        help='This ingredient is itself a prepared component with its own recipe'
     )
 
     # Quantity and UoM
@@ -63,3 +68,31 @@ class RecipeIngredientLine(models.Model):
     def _onchange_product_id(self):
         if self.product_id:
             self.uom_id = self.product_id.uom_id
+
+    def action_view_component_recipe(self):
+        """Open the recipe for this component ingredient."""
+        self.ensure_one()
+        if not self.is_component:
+            return False
+
+        recipe = self.env['restaurant.recipe'].search([
+            ('product_id', '=', self.product_id.id),
+            ('recipe_type', '=', 'component')
+        ], limit=1)
+
+        if not recipe:
+            # Try any recipe for this product
+            recipe = self.env['restaurant.recipe'].search([
+                ('product_id', '=', self.product_id.id)
+            ], limit=1)
+
+        if recipe:
+            return {
+                'type': 'ir.actions.act_window',
+                'name': recipe.name,
+                'res_model': 'restaurant.recipe',
+                'view_mode': 'form',
+                'res_id': recipe.id,
+                'target': 'current',
+            }
+        return False

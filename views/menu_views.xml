@@ -1,38 +1,174 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ===================== -->
+    <!-- Root Menu -->
+    <!-- ===================== -->
     <menuitem id="menu_recipe_costing_root"
               name="Recipe &amp; Costing"
+              web_icon="pos_recipe_costing,static/description/icon.png"
               sequence="35"
               groups="point_of_sale.group_pos_user"/>
 
+    <!-- ===================== -->
+    <!-- Main Navigation Items -->
+    <!-- ===================== -->
+
+    <!-- 1. Dashboard (First Item) -->
     <menuitem id="menu_recipe_dashboard"
-              name="Dashboard / لوحة التحكم"
+              name="Dashboard"
               parent="menu_recipe_costing_root"
               action="action_recipe_dashboard_server"
               sequence="1"/>
 
-    <menuitem id="menu_recipe_recipes"
-              name="Recipes / الوصفات"
+    <!-- 2. Recipes Section -->
+    <menuitem id="menu_recipe_section"
+              name="Recipes"
               parent="menu_recipe_costing_root"
+              sequence="10"/>
+
+    <menuitem id="menu_recipe_recipes"
+              name="All Recipes"
+              parent="menu_recipe_section"
               action="action_restaurant_recipe"
               sequence="10"/>
 
-    <menuitem id="menu_recipe_ingredients"
-              name="Ingredients / المكونات"
+    <menuitem id="menu_recipe_variant_setup"
+              name="Setup Variant Recipes"
+              parent="menu_recipe_section"
+              action="action_recipe_variant_setup"
+              sequence="20"/>
+
+    <menuitem id="menu_recipe_variant_editor"
+              name="Edit Variant Recipes"
+              parent="menu_recipe_section"
+              action="action_recipe_variant_editor"
+              sequence="30"/>
+
+    <!-- 3. Products Section -->
+    <menuitem id="menu_products_section"
+              name="Products"
               parent="menu_recipe_costing_root"
               sequence="20"/>
 
+    <menuitem id="menu_pos_products"
+              name="POS Products"
+              parent="menu_products_section"
+              action="action_pos_products_list"
+              sequence="10"/>
+
+    <menuitem id="menu_products_no_recipe"
+              name="Without Recipe"
+              parent="menu_products_section"
+              action="action_products_without_recipe"
+              sequence="20"/>
+
+    <menuitem id="menu_products_high_cost"
+              name="High Cost Items"
+              parent="menu_products_section"
+              action="action_high_cost_recipes"
+              sequence="30"/>
+
+    <!-- 4. Ingredients Section -->
+    <menuitem id="menu_recipe_ingredients"
+              name="Ingredients"
+              parent="menu_recipe_costing_root"
+              sequence="30"/>
+
     <menuitem id="menu_ingredient_list"
-              name="All Ingredients / جميع المكونات"
+              name="All Ingredients"
               parent="menu_recipe_ingredients"
               action="action_restaurant_ingredients"
               sequence="10"/>
 
-    <menuitem id="menu_ingredient_stocktake"
-              name="Stocktake / الجرد"
+    <menuitem id="menu_components_list"
+              name="Components"
               parent="menu_recipe_ingredients"
+              action="action_restaurant_components"
+              sequence="20"/>
+
+    <menuitem id="menu_ingredient_categories"
+              name="Categories"
+              parent="menu_recipe_ingredients"
+              action="action_ingredient_categories"
+              sequence="30"/>
+
+    <!-- 5. Inventory Section -->
+    <menuitem id="menu_inventory_section"
+              name="Inventory"
+              parent="menu_recipe_costing_root"
+              sequence="40"/>
+
+    <menuitem id="menu_ingredient_stocktake"
+              name="Stocktake"
+              parent="menu_inventory_section"
               action="action_ingredient_stocktake"
+              sequence="10"/>
+
+    <menuitem id="menu_ingredient_waste"
+              name="Waste Records"
+              parent="menu_inventory_section"
+              action="action_ingredient_waste"
+              sequence="20"/>
+
+    <menuitem id="menu_waste_analysis"
+              name="Waste Analysis"
+              parent="menu_inventory_section"
+              action="action_waste_analysis"
+              sequence="30"/>
+
+    <menuitem id="menu_bom_list"
+              name="BOMs / Kits"
+              parent="menu_inventory_section"
+              action="action_recipe_bom_list"
+              sequence="40"/>
+
+    <!-- 6. Reports Section -->
+    <menuitem id="menu_reports_section"
+              name="Reports"
+              parent="menu_recipe_costing_root"
+              sequence="50"/>
+
+    <menuitem id="menu_consumption_report"
+              name="Consumption Report"
+              parent="menu_reports_section"
+              action="action_consumption_report_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_consumption_lines"
+              name="Consumption History"
+              parent="menu_reports_section"
+              action="action_consumption_lines"
+              sequence="20"/>
+
+    <menuitem id="menu_ingredient_cost_history"
+              name="Ingredient Cost History"
+              parent="menu_reports_section"
+              action="action_ingredient_cost_history"
+              sequence="30"/>
+
+    <menuitem id="menu_recipe_cost_history"
+              name="Recipe Cost History"
+              parent="menu_reports_section"
+              action="action_recipe_cost_history"
+              sequence="40"/>
+
+    <!-- 7. Configuration Section -->
+    <menuitem id="menu_config_section"
+              name="Configuration"
+              parent="menu_recipe_costing_root"
+              sequence="60"/>
+
+    <menuitem id="menu_product_attributes"
+              name="Product Attributes"
+              parent="menu_config_section"
+              action="action_product_attribute_recipe"
+              sequence="10"/>
+
+    <menuitem id="menu_recipe_settings"
+              name="Settings"
+              parent="menu_config_section"
+              action="action_recipe_config_settings"
               sequence="20"/>
 
 </odoo>

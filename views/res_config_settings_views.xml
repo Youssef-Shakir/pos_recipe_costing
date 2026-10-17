@@ -53,6 +53,11 @@
                             <field name="stocktake_loss_account_id"/>
                         </setting>
                     </block>
+                    <block title="Waste Tracking / تتبع الهدر" name="waste_tracking">
+                        <setting string="Waste Expense Account / حساب مصروفات الهدر" help="Account for recording waste expenses (expired, spoiled, damaged ingredients)">
+                            <field name="waste_account_id"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>
@@ -61,6 +66,15 @@
     <!-- Settings Action -->
     <record id="action_recipe_general_settings" model="ir.actions.act_window">
         <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'pos_recipe_costing'}</field>
+    </record>
+
+    <!-- Alias for menu -->
+    <record id="action_recipe_config_settings" model="ir.actions.act_window">
+        <field name="name">Recipe &amp; Costing Settings</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>

@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===================== -->
+    <!-- Ingredient Cost History Views -->
+    <!-- ===================== -->
+
+    <!-- List View for Ingredient Cost History -->
+    <record id="view_ingredient_cost_history_list" model="ir.ui.view">
+        <field name="name">ingredient.cost.history.list</field>
+        <field name="model">ingredient.cost.history</field>
+        <field name="arch" type="xml">
+            <list string="Ingredient Cost History" create="false" edit="false" decoration-danger="change_percentage &gt; 10" decoration-success="change_percentage &lt; -5">
+                <field name="change_date"/>
+                <field name="product_id"/>
+                <field name="old_cost" widget="monetary"/>
+                <field name="new_cost" widget="monetary"/>
+                <field name="change_percentage" widget="float" decoration-danger="change_percentage &gt; 0" decoration-success="change_percentage &lt; 0"/>
+                <field name="reason"/>
+                <field name="changed_by"/>
+                <field name="notes" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Ingredient Cost History -->
+    <record id="view_ingredient_cost_history_form" model="ir.ui.view">
+        <field name="name">ingredient.cost.history.form</field>
+        <field name="model">ingredient.cost.history</field>
+        <field name="arch" type="xml">
+            <form string="Ingredient Cost History" create="false">
+                <sheet>
+                    <group>
+                        <group string="Product Information">
+                            <field name="product_id"/>
+                            <field name="change_date"/>
+                            <field name="changed_by"/>
+                        </group>
+                        <group string="Cost Change">
+                            <field name="old_cost" widget="monetary"/>
+                            <field name="new_cost" widget="monetary"/>
+                            <field name="change_percentage" widget="percentage"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="reason"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Graph View for Ingredient Cost History -->
+    <record id="view_ingredient_cost_history_graph" model="ir.ui.view">
+        <field name="name">ingredient.cost.history.graph</field>
+        <field name="model">ingredient.cost.history</field>
+        <field name="arch" type="xml">
+            <graph string="Ingredient Cost Trends" type="line">
+                <field name="change_date" interval="day"/>
+                <field name="new_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot View for Ingredient Cost History -->
+    <record id="view_ingredient_cost_history_pivot" model="ir.ui.view">
+        <field name="name">ingredient.cost.history.pivot</field>
+        <field name="model">ingredient.cost.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Ingredient Cost Analysis">
+                <field name="product_id" type="row"/>
+                <field name="change_date" interval="month" type="col"/>
+                <field name="change_percentage" type="measure"/>
+                <field name="new_cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Search View for Ingredient Cost History -->
+    <record id="view_ingredient_cost_history_search" model="ir.ui.view">
+        <field name="name">ingredient.cost.history.search</field>
+        <field name="model">ingredient.cost.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Cost History">
+                <field name="product_id"/>
+                <field name="changed_by"/>
+                <field name="reason"/>
+                <filter name="filter_today" string="Today" domain="[('change_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter name="filter_this_week" string="This Week" domain="[('change_date', '&gt;=', (context_today() - relativedelta(weeks=1)))]"/>
+                <filter name="filter_this_month" string="This Month" domain="[('change_date', '&gt;=', (context_today().replace(day=1)))]"/>
+                <filter name="filter_last_30_days" string="Last 30 Days" domain="[('change_date', '&gt;=', (context_today() - relativedelta(days=30)))]"/>
+                <separator/>
+                <filter name="filter_increases" string="Price Increases" domain="[('change_percentage', '&gt;', 0)]"/>
+                <filter name="filter_decreases" string="Price Decreases" domain="[('change_percentage', '&lt;', 0)]"/>
+                <filter name="filter_significant" string="Significant Changes (>10%)" domain="['|', ('change_percentage', '&gt;', 10), ('change_percentage', '&lt;', -10)]"/>
+                <separator/>
+                <filter name="filter_supplier_change" string="Supplier Change" domain="[('reason', '=', 'supplier_change')]"/>
+                <filter name="filter_market_price" string="Market Price" domain="[('reason', '=', 'market_price')]"/>
+                <filter name="filter_manual" string="Manual Adjustment" domain="[('reason', '=', 'manual_adjustment')]"/>
+                <filter name="filter_bulk" string="Bulk Update" domain="[('reason', '=', 'bulk_update')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_product" string="Product" context="{'group_by': 'product_id'}"/>
+                    <filter name="group_reason" string="Reason" context="{'group_by': 'reason'}"/>
+                    <filter name="group_user" string="Changed By" context="{'group_by': 'changed_by'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'change_date:day'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'change_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Ingredient Cost History -->
+    <record id="action_ingredient_cost_history" model="ir.actions.act_window">
+        <field name="name">Ingredient Cost History</field>
+        <field name="res_model">ingredient.cost.history</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_ingredient_cost_history_search"/>
+        <field name="context">{'search_default_filter_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No cost history records yet
+            </p>
+            <p>
+                Cost history is automatically tracked when ingredient prices change.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ===================== -->
+    <!-- Recipe Cost History Views -->
+    <!-- ===================== -->
+
+    <!-- List View for Recipe Cost History -->
+    <record id="view_recipe_cost_history_list" model="ir.ui.view">
+        <field name="name">recipe.cost.history.list</field>
+        <field name="model">recipe.cost.history</field>
+        <field name="arch" type="xml">
+            <list string="Recipe Cost History" create="false" edit="false" decoration-danger="change_percentage &gt; 10" decoration-success="change_percentage &lt; -5">
+                <field name="change_date"/>
+                <field name="recipe_id"/>
+                <field name="product_id" optional="show"/>
+                <field name="old_cost" widget="monetary"/>
+                <field name="new_cost" widget="monetary"/>
+                <field name="change_percentage" widget="float" decoration-danger="change_percentage &gt; 0" decoration-success="change_percentage &lt; 0"/>
+                <field name="trigger"/>
+                <field name="selling_price" widget="monetary" optional="show"/>
+                <field name="new_food_cost_percentage" string="Food Cost %" optional="show"/>
+                <field name="changed_by" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Recipe Cost History -->
+    <record id="view_recipe_cost_history_form" model="ir.ui.view">
+        <field name="name">recipe.cost.history.form</field>
+        <field name="model">recipe.cost.history</field>
+        <field name="arch" type="xml">
+            <form string="Recipe Cost History" create="false">
+                <sheet>
+                    <group>
+                        <group string="Recipe Information">
+                            <field name="recipe_id"/>
+                            <field name="product_id"/>
+                            <field name="change_date"/>
+                            <field name="changed_by"/>
+                            <field name="trigger"/>
+                        </group>
+                        <group string="Cost Change">
+                            <field name="old_cost" widget="monetary"/>
+                            <field name="new_cost" widget="monetary"/>
+                            <field name="change_percentage" widget="percentage"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Portion Size">
+                            <field name="old_portion_size"/>
+                            <field name="new_portion_size"/>
+                        </group>
+                        <group string="Food Cost %">
+                            <field name="old_food_cost_percentage"/>
+                            <field name="new_food_cost_percentage"/>
+                            <field name="selling_price" widget="monetary"/>
+                        </group>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Graph View for Recipe Cost History -->
+    <record id="view_recipe_cost_history_graph" model="ir.ui.view">
+        <field name="name">recipe.cost.history.graph</field>
+        <field name="model">recipe.cost.history</field>
+        <field name="arch" type="xml">
+            <graph string="Recipe Cost Trends" type="line">
+                <field name="change_date" interval="day"/>
+                <field name="new_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot View for Recipe Cost History -->
+    <record id="view_recipe_cost_history_pivot" model="ir.ui.view">
+        <field name="name">recipe.cost.history.pivot</field>
+        <field name="model">recipe.cost.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Recipe Cost Analysis">
+                <field name="recipe_id" type="row"/>
+                <field name="change_date" interval="month" type="col"/>
+                <field name="change_percentage" type="measure"/>
+                <field name="new_cost" type="measure"/>
+                <field name="new_food_cost_percentage" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Search View for Recipe Cost History -->
+    <record id="view_recipe_cost_history_search" model="ir.ui.view">
+        <field name="name">recipe.cost.history.search</field>
+        <field name="model">recipe.cost.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Recipe Cost History">
+                <field name="recipe_id"/>
+                <field name="product_id"/>
+                <field name="changed_by"/>
+                <field name="trigger"/>
+                <filter name="filter_today" string="Today" domain="[('change_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter name="filter_this_week" string="This Week" domain="[('change_date', '&gt;=', (context_today() - relativedelta(weeks=1)))]"/>
+                <filter name="filter_this_month" string="This Month" domain="[('change_date', '&gt;=', (context_today().replace(day=1)))]"/>
+                <filter name="filter_last_30_days" string="Last 30 Days" domain="[('change_date', '&gt;=', (context_today() - relativedelta(days=30)))]"/>
+                <separator/>
+                <filter name="filter_increases" string="Cost Increases" domain="[('change_percentage', '&gt;', 0)]"/>
+                <filter name="filter_decreases" string="Cost Decreases" domain="[('change_percentage', '&lt;', 0)]"/>
+                <filter name="filter_significant" string="Significant Changes (>10%)" domain="['|', ('change_percentage', '&gt;', 10), ('change_percentage', '&lt;', -10)]"/>
+                <separator/>
+                <filter name="filter_ingredient_change" string="Ingredient Change" domain="[('trigger', '=', 'ingredient_change')]"/>
+                <filter name="filter_portion_change" string="Portion Change" domain="[('trigger', '=', 'portion_change')]"/>
+                <filter name="filter_recipe_edit" string="Recipe Edit" domain="[('trigger', '=', 'recipe_edit')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_recipe" string="Recipe" context="{'group_by': 'recipe_id'}"/>
+                    <filter name="group_product" string="Menu Item" context="{'group_by': 'product_id'}"/>
+                    <filter name="group_trigger" string="Trigger" context="{'group_by': 'trigger'}"/>
+                    <filter name="group_user" string="Changed By" context="{'group_by': 'changed_by'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'change_date:day'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'change_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Recipe Cost History -->
+    <record id="action_recipe_cost_history" model="ir.actions.act_window">
+        <field name="name">Recipe Cost History</field>
+        <field name="res_model">recipe.cost.history</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_recipe_cost_history_search"/>
+        <field name="context">{'search_default_filter_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No recipe cost history records yet
+            </p>
+            <p>
+                Cost history is automatically tracked when recipe costs change due to
+                ingredient price changes, portion size adjustments, or recipe edits.
+            </p>
+        </field>
+    </record>
+
+
+    <!-- ===================== -->
+    <!-- Combined Cost History Views -->
+    <!-- ===================== -->
+
+    <!-- Combined Cost History Action using server action -->
+    <record id="action_all_cost_history" model="ir.actions.act_window">
+        <field name="name">All Cost History</field>
+        <field name="res_model">ingredient.cost.history</field>
+        <field name="view_mode">list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_ingredient_cost_history_search"/>
+        <field name="context">{'search_default_filter_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No cost history records yet
+            </p>
+            <p>
+                Cost history is automatically tracked when prices change.
+                View ingredient and recipe cost changes from the menu.
+            </p>
+        </field>
+    </record>
+
+</odoo>

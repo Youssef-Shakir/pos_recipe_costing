@@ -17,12 +17,20 @@ class QuickProduct(models.TransientModel):
         string='POS Category',
         default=lambda self: self._default_pos_category()
     )
+    production_type = fields.Selection([
+        ('kitchen', 'Made in Kitchen'),
+        ('buy_sell', 'Buy & Sell'),
+        ('component', 'Component/Sub-Recipe'),
+    ], string='Production Type', default='kitchen', required=True,
+       help="Kitchen: Prepared on-site, needs recipe\n"
+            "Buy & Sell: Purchased and resold as-is\n"
+            "Component: Made in-house, used in other recipes")
     recipe_type = fields.Selection([
         ('dish', 'Dish/Menu Item'),
         ('drink', 'Beverage'),
         ('dessert', 'Dessert'),
         ('component', 'Component/Sub-Recipe'),
-    ], string='Type', default='dish', required=True)
+    ], string='Recipe Type', default='dish', required=True)
     selling_price = fields.Float(string='Selling Price', required=True)
     image = fields.Binary(string='Image')
     description = fields.Text(string='Description')
@@ -30,8 +38,20 @@ class QuickProduct(models.TransientModel):
     internal_reference = fields.Char(string='Internal Reference')
 
     # Recipe fields
-    create_recipe = fields.Boolean(string='Create Recipe', default=True)
+    create_recipe = fields.Boolean(string='Create Recipe', default=True,
+        help="Automatically disabled for Buy & Sell products")
     portion_size = fields.Float(string='Portions', default=1.0)
+
+    @api.onchange('production_type')
+    def _onchange_production_type(self):
+        """Auto-adjust fields based on production type."""
+        if self.production_type == 'buy_sell':
+            self.create_recipe = False
+        elif self.production_type == 'component':
+            self.create_recipe = True
+            self.recipe_type = 'component'
+        else:
+            self.create_recipe = True
 
     @api.model
     def _default_category(self):
@@ -53,9 +73,17 @@ class QuickProduct(models.TransientModel):
         """Create the menu item product and optionally a recipe"""
         self.ensure_one()
 
+        # Determine product type based on production type
+        # Buy & Sell products need inventory tracking (storable)
+        # Kitchen made items use BOM consumption (consumable)
+        if self.production_type == 'buy_sell':
+            detailed_type = 'product'  # Storable - track inventory
+        else:
+            detailed_type = 'consu'  # Consumable - BOM handles stock
+
         product_vals = {
             'name': self.name,
-            'type': 'consu',  # Consumable - BOM handles stock
+            'detailed_type': detailed_type,
             'available_in_pos': True,
             'categ_id': self.category_id.id if self.category_id else self.env.ref('product.product_category_all').id,
             'list_price': self.selling_price,
@@ -63,6 +91,7 @@ class QuickProduct(models.TransientModel):
             'description_sale': self.description,
             'barcode': self.barcode,
             'default_code': self.internal_reference,
+            'production_type': self.production_type,
         }
 
         if self.pos_categ_id:

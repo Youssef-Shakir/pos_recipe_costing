@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Recipe Variant Editor Form -->
+    <record id="view_recipe_variant_editor_form" model="ir.ui.view">
+        <field name="name">recipe.variant.editor.form</field>
+        <field name="model">recipe.variant.editor</field>
+        <field name="arch" type="xml">
+            <form string="Edit Variant Recipes">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="product_tmpl_id" placeholder="Select Product..."/>
+                        </h1>
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div class="row mb-3" invisible="not product_tmpl_id">
+                        <div class="col-md-4">
+                            <div class="alert alert-info text-center mb-0">
+                                <strong><field name="total_variants" class="d-inline"/></strong>
+                                <span>Total Variants</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-success text-center mb-0">
+                                <strong><field name="variants_with_recipe" class="d-inline"/></strong>
+                                <span>With Recipe</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-warning text-center mb-0">
+                                <strong><field name="variants_without_recipe" class="d-inline"/></strong>
+                                <span>Without Recipe</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-3" role="alert" invisible="not product_tmpl_id">
+                        <strong>How to use:</strong>
+                        <ul class="mb-0">
+                            <li>Click on a variant row to expand and edit its ingredients</li>
+                            <li>Add/remove ingredients directly in the table</li>
+                            <li>Use "Copy Ingredients" to duplicate from one variant to others</li>
+                            <li>Click "Save All Changes" when done</li>
+                        </ul>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <group invisible="not product_tmpl_id">
+                        <div>
+                            <button name="action_copy_from_variant" type="object"
+                                    string="Copy Ingredients Between Variants"
+                                    class="btn-secondary me-2"
+                                    icon="fa-copy"/>
+                        </div>
+                    </group>
+
+                    <!-- Variant Lines - Visual Cards with Inline Editing -->
+                    <field name="variant_line_ids" nolabel="1" invisible="not product_tmpl_id"
+                           mode="kanban">
+                        <kanban class="o_recipe_variant_kanban">
+                            <field name="variant_name"/>
+                            <field name="attribute_values"/>
+                            <field name="has_recipe"/>
+                            <field name="recipe_id"/>
+                            <field name="ingredient_count"/>
+                            <field name="total_cost"/>
+                            <field name="variant_id"/>
+                            <templates>
+                                <t t-name="card">
+                                    <div class="oe_kanban_card oe_kanban_global_click"
+                                         t-attf-class="#{record.has_recipe.raw_value ? 'border-start border-success border-3' : 'border-start border-warning border-3'}">
+                                        <div class="oe_kanban_content">
+                                            <div class="o_kanban_record_top">
+                                                <div class="o_kanban_record_headings">
+                                                    <strong class="o_kanban_record_title">
+                                                        <field name="variant_name"/>
+                                                    </strong>
+                                                </div>
+                                                <div class="o_kanban_record_top_right">
+                                                    <t t-if="record.has_recipe.raw_value">
+                                                        <span class="badge bg-success">Has Recipe</span>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span class="badge bg-warning text-dark">No Recipe</span>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                            <div class="o_kanban_record_body text-muted">
+                                                <div><strong>Attributes:</strong> <field name="attribute_values"/></div>
+                                                <div>
+                                                    <strong>Ingredients:</strong> <field name="ingredient_count"/>
+                                                    <span class="ms-3"><strong>Cost:</strong> <field name="total_cost" widget="monetary"/></span>
+                                                </div>
+                                            </div>
+                                            <div class="o_kanban_record_bottom mt-2">
+                                                <div class="oe_kanban_bottom_right">
+                                                    <button t-if="record.recipe_id.raw_value"
+                                                            name="action_open_recipe" type="object"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                        <i class="fa fa-external-link"/> Open Recipe
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                            </templates>
+                        </kanban>
+                    </field>
+
+                    <!-- Detailed Ingredient Editor - Click a card above to edit below -->
+                    <notebook invisible="not variant_line_ids">
+                        <page string="Edit Ingredients (click card above)" name="ingredients">
+                            <div class="alert alert-secondary mb-2">
+                                <strong>Instructions:</strong> Click on a variant card above to select it,
+                                then add/edit ingredients in the form that opens.
+                                Use "Save All Changes" when done editing all variants.
+                            </div>
+                            <!-- Alternative: Show all variants in expandable sections -->
+                            <field name="variant_line_ids" nolabel="1">
+                                <list editable="bottom" open_form_view="True">
+                                    <field name="variant_name" readonly="1" string="Variant"/>
+                                    <field name="attribute_values" readonly="1" string="Attributes"/>
+                                    <field name="has_recipe" widget="boolean_toggle" readonly="1"/>
+                                    <field name="ingredient_count" readonly="1" string="# Ing."/>
+                                    <field name="total_cost" widget="monetary" readonly="1"/>
+                                    <button name="action_open_recipe" type="object"
+                                            icon="fa-external-link" title="Open Recipe"
+                                            invisible="not recipe_id" class="btn-link"/>
+                                    <field name="recipe_id" column_invisible="1"/>
+                                    <field name="variant_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_save_all_recipes" type="object"
+                            string="Save All Changes" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Simplified Ingredient Edit View for each variant line -->
+    <record id="view_recipe_variant_editor_line_form" model="ir.ui.view">
+        <field name="name">recipe.variant.editor.line.form</field>
+        <field name="model">recipe.variant.editor.line</field>
+        <field name="arch" type="xml">
+            <form string="Variant Recipe">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="variant_name" readonly="1"/>
+                            <field name="attribute_values" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="has_recipe" widget="boolean_toggle" readonly="1"/>
+                            <field name="total_cost" widget="monetary" readonly="1"/>
+                        </group>
+                    </group>
+                    <separator string="Ingredients"/>
+                    <field name="ingredient_line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="product_id"
+                                   context="{'default_is_ingredient': True}"/>
+                            <field name="quantity"/>
+                            <field name="uom_id"/>
+                            <field name="unit_cost" readonly="1" optional="show"/>
+                            <field name="cost" readonly="1"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Copy Wizard Form -->
+    <record id="view_recipe_variant_copy_form" model="ir.ui.view">
+        <field name="name">recipe.variant.copy.form</field>
+        <field name="model">recipe.variant.copy</field>
+        <field name="arch" type="xml">
+            <form string="Copy Ingredients">
+                <sheet>
+                    <div class="alert alert-info mb-3" role="alert">
+                        Copy all ingredients from one variant's recipe to other variants.
+                        Existing recipes will be updated; new recipes will be created.
+                    </div>
+                    <field name="product_tmpl_id" invisible="1"/>
+                    <field name="editor_id" invisible="1"/>
+                    <group>
+                        <field name="source_variant_id"
+                               string="Copy From Variant"/>
+                    </group>
+                    <group string="Copy To">
+                        <field name="target_variant_ids" nolabel="1"
+                               widget="many2many_checkboxes"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_copy" type="object"
+                            string="Copy Ingredients" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_recipe_variant_editor" model="ir.actions.act_window">
+        <field name="name">Edit Variant Recipes</field>
+        <field name="res_model">recipe.variant.editor</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

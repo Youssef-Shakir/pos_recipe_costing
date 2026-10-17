@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- Consumption Report Wizard Views -->
+    <!-- ============================================================ -->
+
+    <record id="view_consumption_report_wizard_form" model="ir.ui.view">
+        <field name="name">consumption.report.wizard.form</field>
+        <field name="model">consumption.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Consumption Report">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <i class="fa fa-chart-bar me-2"/>Ingredient Consumption Report
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Date Range">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group string="Summary">
+                            <field name="total_consumption_value" widget="monetary"/>
+                            <field name="total_ingredients_consumed"/>
+                            <field name="total_orders"/>
+                        </group>
+                    </group>
+
+                    <group string="Filters (Optional)">
+                        <group>
+                            <field name="product_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="All ingredients..."/>
+                            <field name="category_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="All categories..."/>
+                        </group>
+                        <group>
+                            <field name="recipe_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="All recipes..."/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button name="action_generate_lines" type="object"
+                                string="Generate Report" class="btn-primary"
+                                icon="fa-refresh"/>
+                        <button name="action_view_consumption" type="object"
+                                string="View Existing Data" class="btn-secondary"
+                                icon="fa-list"/>
+                        <button name="action_print_report" type="object"
+                                string="Print PDF" class="btn-secondary"
+                                icon="fa-print"/>
+                        <button string="Close" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_consumption_report_wizard" model="ir.actions.act_window">
+        <field name="name">Consumption Report</field>
+        <field name="res_model">consumption.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Consumption Line Views -->
+    <!-- ============================================================ -->
+
+    <!-- List View -->
+    <record id="view_consumption_line_list" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.list</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <list string="Ingredient Consumption" default_order="cost desc">
+                <field name="date"/>
+                <field name="date_from" optional="hide"/>
+                <field name="date_to" optional="hide"/>
+                <field name="product_id"/>
+                <field name="product_categ_id"/>
+                <field name="quantity" sum="Total Qty"/>
+                <field name="uom_id"/>
+                <field name="unit_cost" widget="monetary" optional="show"/>
+                <field name="cost" widget="monetary" sum="Total Cost"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="recipe_names" optional="show"/>
+                <button name="action_view_recipes" type="object"
+                        string="Recipes" icon="fa-book"
+                        class="btn-link"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_consumption_line_form" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.form</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <form string="Consumption Line">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="product_id" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Consumption Details">
+                            <field name="date"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="quantity"/>
+                            <field name="uom_id"/>
+                        </group>
+                        <group string="Cost">
+                            <field name="unit_cost" widget="monetary"/>
+                            <field name="cost" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Related Data">
+                        <field name="product_categ_id"/>
+                        <field name="recipe_ids" widget="many2many_tags"/>
+                        <field name="recipe_names" readonly="1"/>
+                    </group>
+                    <group string="Source">
+                        <field name="source_move_ids" widget="many2many_tags" readonly="1"/>
+                        <field name="pos_order_ids" widget="many2many_tags" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Pivot View - Analysis by Ingredient, Recipe, Date -->
+    <record id="view_consumption_line_pivot" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.pivot</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Consumption Analysis" default_order="cost desc">
+                <field name="product_categ_id" type="row"/>
+                <field name="product_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="quantity" type="measure"/>
+                <field name="cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph View - Consumption Trends -->
+    <record id="view_consumption_line_graph" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.graph</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <graph string="Consumption Trends" type="bar">
+                <field name="product_id"/>
+                <field name="cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Graph View - Line chart for trends over time -->
+    <record id="view_consumption_line_graph_line" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.graph.line</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <graph string="Consumption Over Time" type="line">
+                <field name="date" interval="day"/>
+                <field name="cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_consumption_line_search" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.search</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Consumption">
+                <field name="product_id"/>
+                <field name="product_categ_id"/>
+                <field name="recipe_names"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('date', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                 ('date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('date', '&gt;=', (context_today() - relativedelta(months=1, day=1)).strftime('%Y-%m-%d')),
+                                 ('date', '&lt;=', (context_today() - relativedelta(day=1) + relativedelta(days=-1)).strftime('%Y-%m-%d'))]"/>
+                <filter name="last_7_days" string="Last 7 Days"
+                        domain="[('date', '&gt;=', (context_today() - relativedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="high_cost" string="High Cost (>100)"
+                        domain="[('cost', '>', 100)]"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter name="group_by_product" string="Ingredient"
+                            context="{'group_by': 'product_id'}"/>
+                    <filter name="group_by_category" string="Category"
+                            context="{'group_by': 'product_categ_id'}"/>
+                    <filter name="group_by_date" string="Date"
+                            context="{'group_by': 'date:month'}"/>
+                    <filter name="group_by_uom" string="Unit of Measure"
+                            context="{'group_by': 'uom_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action to view all consumption lines -->
+    <record id="action_consumption_lines" model="ir.actions.act_window">
+        <field name="name">Ingredient Consumption</field>
+        <field name="res_model">ingredient.consumption.line</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_consumption_line_search"/>
+        <field name="context">{'search_default_group_by_category': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No consumption data found
+            </p>
+            <p>
+                Use the Consumption Report wizard to generate consumption data
+                from POS sales and stock movements.
+            </p>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Dashboard-style Summary View (kanban cards) -->
+    <!-- ============================================================ -->
+
+    <record id="view_consumption_line_kanban" model="ir.ui.view">
+        <field name="name">ingredient.consumption.line.kanban</field>
+        <field name="model">ingredient.consumption.line</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="product_id"/>
+                <field name="product_categ_id"/>
+                <field name="quantity"/>
+                <field name="uom_id"/>
+                <field name="cost"/>
+                <field name="currency_id"/>
+                <field name="date"/>
+                <templates>
+                    <t t-name="kanban-card">
+                        <div class="oe_kanban_content">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="product_id"/>
+                                    </strong>
+                                    <span class="o_kanban_record_subtitle text-muted">
+                                        <field name="product_categ_id"/>
+                                    </span>
+                                </div>
+                                <div class="o_dropdown_kanban dropdown">
+                                    <field name="cost" widget="monetary"/>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <span><field name="quantity"/> <field name="uom_id"/></span>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <span class="text-muted"><field name="date"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+</odoo>

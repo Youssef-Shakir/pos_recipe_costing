@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Variant Recipe Report Template -->
+    <template id="report_variant_recipes">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="product_tmpl">
+                    <div class="page" style="font-family: Arial, sans-serif;">
+                        <!-- Header Section -->
+                        <div class="text-center" style="margin-bottom: 20px; border-bottom: 3px solid #333; padding-bottom: 15px;">
+                            <h1 style="font-size: 28pt; margin-bottom: 5px; font-weight: bold;">
+                                <t t-esc="product_tmpl.name"/>
+                            </h1>
+                            <h3 style="font-size: 14pt; color: #666; margin: 5px 0;">
+                                Variant Recipe Comparison / مقارنة وصفات المنتجات
+                            </h3>
+                            <p style="font-size: 10pt; color: #888; margin: 5px 0;">
+                                Generated: <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/>
+                            </p>
+                        </div>
+
+                        <!-- Recipe Summary Table -->
+                        <t t-set="recipes" t-value="product_tmpl.recipe_ids"/>
+                        <t t-set="variant_data" t-value="product_tmpl._get_variant_comparison_data()"/>
+
+                        <t t-if="recipes">
+                            <!-- Summary Overview -->
+                            <div style="margin-bottom: 25px;">
+                                <h4 style="font-size: 14pt; background: #f5f5f5; padding: 8px 12px; margin-bottom: 10px; border-left: 4px solid #007bff;">
+                                    Overview / ملخص
+                                </h4>
+                                <table class="table table-bordered" style="font-size: 11pt; width: 100%;">
+                                    <thead style="background: #343a40; color: white;">
+                                        <tr>
+                                            <th style="padding: 10px; text-align: left; width: 25%;">Variant / المنتج</th>
+                                            <th style="padding: 10px; text-align: left; width: 25%;">Attributes / الصفات</th>
+                                            <th style="padding: 10px; text-align: right; width: 12%;">Cost / التكلفة</th>
+                                            <th style="padding: 10px; text-align: right; width: 12%;">Price / السعر</th>
+                                            <th style="padding: 10px; text-align: right; width: 13%;">Food Cost %</th>
+                                            <th style="padding: 10px; text-align: center; width: 13%;">Ingredients</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="recipes" t-as="recipe">
+                                            <tr style="border-bottom: 1px solid #ddd;">
+                                                <td style="padding: 10px; font-weight: bold;">
+                                                    <t t-esc="recipe.product_id.name"/>
+                                                </td>
+                                                <td style="padding: 10px;">
+                                                    <t t-set="attrs" t-value="recipe.product_id.product_template_attribute_value_ids"/>
+                                                    <t t-if="attrs">
+                                                        <t t-foreach="attrs" t-as="attr">
+                                                            <span style="background: #e9ecef; padding: 2px 8px; border-radius: 3px; margin-right: 5px; font-size: 10pt; display: inline-block; margin-bottom: 3px;">
+                                                                <t t-esc="attr.name"/>
+                                                            </span>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <span style="color: #888; font-style: italic;">Base Product</span>
+                                                    </t>
+                                                </td>
+                                                <td style="padding: 10px; text-align: right;">
+                                                    <t t-esc="'%.2f' % recipe.cost_per_portion"/>
+                                                    <t t-esc="recipe.currency_id.symbol"/>
+                                                </td>
+                                                <td style="padding: 10px; text-align: right;">
+                                                    <t t-esc="'%.2f' % recipe.selling_price"/>
+                                                    <t t-esc="recipe.currency_id.symbol"/>
+                                                </td>
+                                                <td style="padding: 10px; text-align: right;">
+                                                    <t t-set="fcp" t-value="recipe.food_cost_percentage"/>
+                                                    <span t-attf-style="color: #{fcp > 35 and '#dc3545' or (fcp > 30 and '#ffc107' or '#28a745')}; font-weight: bold;">
+                                                        <t t-esc="'%.1f' % fcp"/>%
+                                                    </span>
+                                                </td>
+                                                <td style="padding: 10px; text-align: center;">
+                                                    <t t-esc="recipe.ingredient_count"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Common Ingredients Section -->
+                            <t t-if="variant_data.get('common_ingredients')">
+                                <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                                    <h4 style="font-size: 14pt; background: #d4edda; padding: 8px 12px; margin-bottom: 10px; border-left: 4px solid #28a745;">
+                                        Common Ingredients (All Variants) / المكونات المشتركة
+                                    </h4>
+                                    <table class="table" style="font-size: 12pt; width: 100%;">
+                                        <thead style="background: #f8f9fa;">
+                                            <tr>
+                                                <th style="padding: 8px 12px; text-align: left; width: 50%; border-bottom: 2px solid #28a745;">Ingredient / المكون</th>
+                                                <th style="padding: 8px 12px; text-align: right; width: 25%; border-bottom: 2px solid #28a745;">Quantity / الكمية</th>
+                                                <th style="padding: 8px 12px; text-align: left; width: 25%; border-bottom: 2px solid #28a745;">Unit / الوحدة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="variant_data['common_ingredients']" t-as="ing">
+                                                <tr style="border-bottom: 1px solid #eee;">
+                                                    <td style="padding: 10px 12px; font-size: 13pt; font-weight: 500;">
+                                                        <t t-esc="ing['name']"/>
+                                                    </td>
+                                                    <td style="padding: 10px 12px; text-align: right; font-size: 13pt;">
+                                                        <t t-esc="'%.2f' % ing['quantity']"/>
+                                                    </td>
+                                                    <td style="padding: 10px 12px; font-size: 13pt;">
+                                                        <t t-esc="ing['uom']"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+
+                            <!-- Individual Variant Details -->
+                            <t t-foreach="recipes" t-as="recipe">
+                                <div style="margin-bottom: 25px; page-break-inside: avoid; border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                                    <!-- Variant Header -->
+                                    <div style="border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 15px;">
+                                        <h4 style="font-size: 16pt; margin: 0; font-weight: bold;">
+                                            <t t-esc="recipe.product_id.name"/>
+                                        </h4>
+                                        <t t-set="attrs" t-value="recipe.product_id.product_template_attribute_value_ids"/>
+                                        <t t-if="attrs">
+                                            <div style="margin-top: 8px;">
+                                                <t t-foreach="attrs" t-as="attr">
+                                                    <span style="background: #007bff; color: white; padding: 4px 12px; border-radius: 15px; margin-right: 8px; font-size: 11pt; display: inline-block;">
+                                                        <strong><t t-esc="attr.attribute_id.name"/>:</strong> <t t-esc="attr.name"/>
+                                                    </span>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+
+                                    <!-- Cost Summary -->
+                                    <div style="display: flex; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 5px;">
+                                        <div style="flex: 1; text-align: center; border-right: 1px solid #ddd;">
+                                            <div style="font-size: 9pt; color: #666; text-transform: uppercase;">Cost per Portion</div>
+                                            <div style="font-size: 16pt; font-weight: bold;">
+                                                <t t-esc="'%.2f' % recipe.cost_per_portion"/> <t t-esc="recipe.currency_id.symbol"/>
+                                            </div>
+                                        </div>
+                                        <div style="flex: 1; text-align: center; border-right: 1px solid #ddd;">
+                                            <div style="font-size: 9pt; color: #666; text-transform: uppercase;">Selling Price</div>
+                                            <div style="font-size: 16pt; font-weight: bold;">
+                                                <t t-esc="'%.2f' % recipe.selling_price"/> <t t-esc="recipe.currency_id.symbol"/>
+                                            </div>
+                                        </div>
+                                        <div style="flex: 1; text-align: center; border-right: 1px solid #ddd;">
+                                            <div style="font-size: 9pt; color: #666; text-transform: uppercase;">Food Cost %</div>
+                                            <t t-set="fcp" t-value="recipe.food_cost_percentage"/>
+                                            <div t-attf-style="font-size: 16pt; font-weight: bold; color: #{fcp > 35 and '#dc3545' or (fcp > 30 and '#ffc107' or '#28a745')};">
+                                                <t t-esc="'%.1f' % fcp"/>%
+                                            </div>
+                                        </div>
+                                        <div style="flex: 1; text-align: center;">
+                                            <div style="font-size: 9pt; color: #666; text-transform: uppercase;">Profit Margin</div>
+                                            <div style="font-size: 16pt; font-weight: bold; color: #28a745;">
+                                                <t t-esc="'%.2f' % recipe.profit_margin"/> <t t-esc="recipe.currency_id.symbol"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Unique Ingredients (if any) -->
+                                    <t t-set="unique_ings" t-value="variant_data.get('unique_ingredients', {}).get(recipe.id, [])"/>
+                                    <t t-if="unique_ings">
+                                        <div style="margin-bottom: 10px;">
+                                            <h5 style="font-size: 12pt; color: #dc3545; margin-bottom: 8px; border-bottom: 1px solid #dc3545; padding-bottom: 5px;">
+                                                Unique to this Variant / خاص بهذا المنتج
+                                            </h5>
+                                            <table style="width: 100%; font-size: 12pt;">
+                                                <t t-foreach="unique_ings" t-as="ing">
+                                                    <tr style="background: #fff3cd;">
+                                                        <td style="padding: 8px 12px; font-weight: 500; width: 50%;">
+                                                            <span style="color: #dc3545; margin-right: 5px;">★</span>
+                                                            <t t-esc="ing['name']"/>
+                                                        </td>
+                                                        <td style="padding: 8px 12px; text-align: right; width: 25%;">
+                                                            <t t-esc="'%.2f' % ing['quantity']"/>
+                                                        </td>
+                                                        <td style="padding: 8px 12px; width: 25%;">
+                                                            <t t-esc="ing['uom']"/>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </table>
+                                        </div>
+                                    </t>
+
+                                    <!-- Full Ingredient List -->
+                                    <div>
+                                        <h5 style="font-size: 12pt; color: #333; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                                            Full Ingredient List / قائمة المكونات الكاملة
+                                        </h5>
+                                        <table style="width: 100%; font-size: 12pt;">
+                                            <thead style="background: #e9ecef;">
+                                                <tr>
+                                                    <th style="padding: 8px 12px; text-align: left;">Ingredient</th>
+                                                    <th style="padding: 8px 12px; text-align: right;">Quantity</th>
+                                                    <th style="padding: 8px 12px; text-align: left;">Unit</th>
+                                                    <th style="padding: 8px 12px; text-align: right;">Cost</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="recipe.ingredient_line_ids" t-as="line">
+                                                    <t t-set="is_unique" t-value="line.product_id.id in [u.get('product_id') for u in unique_ings]"/>
+                                                    <tr t-attf-style="border-bottom: 1px solid #eee; #{is_unique and 'background: #fff3cd;' or ''}">
+                                                        <td style="padding: 10px 12px; font-size: 13pt; font-weight: 500;">
+                                                            <t t-if="is_unique">
+                                                                <span style="color: #dc3545; margin-right: 5px;">★</span>
+                                                            </t>
+                                                            <t t-esc="line.product_id.name"/>
+                                                        </td>
+                                                        <td style="padding: 10px 12px; text-align: right; font-size: 14pt; font-weight: bold;">
+                                                            <t t-esc="'%.2f' % line.quantity"/>
+                                                        </td>
+                                                        <td style="padding: 10px 12px; font-size: 13pt;">
+                                                            <t t-esc="line.uom_id.name"/>
+                                                        </td>
+                                                        <td style="padding: 10px 12px; text-align: right; font-size: 12pt;">
+                                                            <t t-esc="'%.2f' % line.cost"/> <t t-esc="recipe.currency_id.symbol"/>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                            <tfoot style="background: #f8f9fa; font-weight: bold;">
+                                                <tr>
+                                                    <td colspan="3" style="padding: 10px 12px; text-align: right;">Total Cost / إجمالي التكلفة:</td>
+                                                    <td style="padding: 10px 12px; text-align: right; font-size: 14pt;">
+                                                        <t t-esc="'%.2f' % recipe.total_cost"/> <t t-esc="recipe.currency_id.symbol"/>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Ingredient Difference Matrix -->
+                            <t t-if="len(recipes) > 1">
+                                <div style="margin-top: 30px; page-break-before: auto;">
+                                    <h4 style="font-size: 14pt; background: #fff3cd; padding: 8px 12px; margin-bottom: 10px; border-left: 4px solid #ffc107;">
+                                        Ingredient Difference Matrix / مصفوفة اختلاف المكونات
+                                    </h4>
+                                    <p style="font-size: 10pt; color: #666; margin-bottom: 10px;">
+                                        ● = Included in variant | Quantity shown if different across variants
+                                    </p>
+                                    <table class="table table-bordered" style="font-size: 10pt; width: 100%;">
+                                        <thead style="background: #343a40; color: white;">
+                                            <tr>
+                                                <th style="padding: 8px; text-align: left;">Ingredient</th>
+                                                <t t-foreach="recipes" t-as="r">
+                                                    <th style="padding: 8px; text-align: center; max-width: 120px;">
+                                                        <t t-set="rattrs" t-value="r.product_id.product_template_attribute_value_ids"/>
+                                                        <t t-if="rattrs">
+                                                            <t t-foreach="rattrs" t-as="ra">
+                                                                <div><t t-esc="ra.name"/></div>
+                                                            </t>
+                                                        </t>
+                                                        <t t-else="">Base</t>
+                                                    </th>
+                                                </t>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="variant_data.get('all_ingredients', [])" t-as="ing">
+                                                <tr style="border-bottom: 1px solid #eee;">
+                                                    <td style="padding: 8px; font-weight: 500;">
+                                                        <t t-esc="ing['name']"/>
+                                                    </td>
+                                                    <t t-foreach="recipes" t-as="r">
+                                                        <t t-set="qty" t-value="ing.get('variants', {}).get(r.id)"/>
+                                                        <td style="padding: 8px; text-align: center;">
+                                                            <t t-if="qty">
+                                                                <t t-if="ing.get('quantity_varies')">
+                                                                    <span style="font-weight: bold;">
+                                                                        <t t-esc="'%.2f' % qty"/>
+                                                                    </span>
+                                                                </t>
+                                                                <t t-else="">
+                                                                    <span style="color: #28a745; font-size: 14pt;">●</span>
+                                                                </t>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <span style="color: #ccc;">—</span>
+                                                            </t>
+                                                        </td>
+                                                    </t>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+
+                        </t>
+                        <t t-else="">
+                            <div class="alert alert-warning" style="text-align: center; padding: 30px;">
+                                <h4>No recipes found for this product template.</h4>
+                                <p>Please create recipes for the product variants first.</p>
+                            </div>
+                        </t>
+
+                        <!-- Footer -->
+                        <div style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; color: #888; font-size: 9pt;">
+                            <p>Recipe Management System - Kitchen Reference Document</p>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Simple Kitchen Card Report (Alternative Layout) -->
+    <template id="report_variant_recipes_kitchen">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="product_tmpl">
+                <t t-foreach="product_tmpl.recipe_ids" t-as="recipe">
+                    <div class="page" style="font-family: Arial, sans-serif; padding: 20px;">
+                        <!-- Large Header for Kitchen -->
+                        <div style="text-align: center; border: 3px solid #000; padding: 15px; margin-bottom: 20px;">
+                            <h1 style="font-size: 32pt; margin: 0; font-weight: bold; text-transform: uppercase;">
+                                <t t-esc="recipe.product_id.name"/>
+                            </h1>
+                            <t t-set="attrs" t-value="recipe.product_id.product_template_attribute_value_ids"/>
+                            <t t-if="attrs">
+                                <div style="margin-top: 10px;">
+                                    <t t-foreach="attrs" t-as="attr">
+                                        <span style="background: #000; color: #fff; padding: 5px 15px; font-size: 14pt; margin: 0 5px; display: inline-block;">
+                                            <t t-esc="attr.name"/>
+                                        </span>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Large Ingredient List -->
+                        <table style="width: 100%; font-size: 16pt; border-collapse: collapse;">
+                            <t t-foreach="recipe.ingredient_line_ids" t-as="line">
+                                <tr style="border-bottom: 2px solid #333;">
+                                    <td style="padding: 15px 10px; font-weight: bold; width: 60%;">
+                                        <t t-esc="line.product_id.name"/>
+                                    </td>
+                                    <td style="padding: 15px 10px; text-align: right; font-size: 20pt; font-weight: bold; width: 20%;">
+                                        <t t-esc="'%.2f' % line.quantity"/>
+                                    </td>
+                                    <td style="padding: 15px 10px; font-size: 14pt; width: 20%;">
+                                        <t t-esc="line.uom_id.name"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </table>
+
+                        <!-- Cost Footer -->
+                        <div style="margin-top: 20px; background: #f5f5f5; padding: 15px; display: flex; border: 2px solid #333;">
+                            <div style="flex: 1; text-align: center;">
+                                <div style="font-size: 10pt; text-transform: uppercase;">Cost</div>
+                                <div style="font-size: 18pt; font-weight: bold;">
+                                    <t t-esc="'%.2f' % recipe.cost_per_portion"/> <t t-esc="recipe.currency_id.symbol"/>
+                                </div>
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
+                                <div style="font-size: 10pt; text-transform: uppercase;">Price</div>
+                                <div style="font-size: 18pt; font-weight: bold;">
+                                    <t t-esc="'%.2f' % recipe.selling_price"/> <t t-esc="recipe.currency_id.symbol"/>
+                                </div>
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
+                                <div style="font-size: 10pt; text-transform: uppercase;">Food Cost %</div>
+                                <t t-set="fcp" t-value="recipe.food_cost_percentage"/>
+                                <div t-attf-style="font-size: 18pt; font-weight: bold; color: #{fcp > 35 and '#dc3545' or (fcp > 30 and '#ffc107' or '#28a745')};">
+                                    <t t-esc="'%.1f' % fcp"/>%
+                                </div>
+                            </div>
+                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
+                                <div style="font-size: 10pt; text-transform: uppercase;">Portions</div>
+                                <div style="font-size: 18pt; font-weight: bold;">
+                                    <t t-esc="recipe.portion_size"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

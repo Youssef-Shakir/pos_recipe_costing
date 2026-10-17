@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_ingredient_waste_form" model="ir.ui.view">
+        <field name="name">ingredient.waste.form</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <form string="Ingredient Waste">
+                <header>
+                    <button name="action_confirm" type="object"
+                            string="Confirm / تأكيد"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft / إعادة للمسودة"
+                            invisible="state != 'confirmed' or account_move_id"
+                            confirm="Are you sure you want to reset this record to draft?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_journal_entry" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="not account_move_id">
+                            <field name="account_move_id" widget="statinfo" string="Journal Entry"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Waste Details / تفاصيل الهدر">
+                            <field name="date" readonly="state == 'confirmed'"/>
+                            <field name="product_id" readonly="state == 'confirmed'"
+                                   options="{'no_create': True}"/>
+                            <field name="quantity" readonly="state == 'confirmed'"/>
+                            <field name="uom_id" readonly="1"/>
+                            <field name="reason" readonly="state == 'confirmed'"/>
+                        </group>
+                        <group string="Cost &amp; Accounting / التكلفة والمحاسبة">
+                            <field name="unit_cost" readonly="1"/>
+                            <field name="cost" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="waste_account_id"
+                                   readonly="state == 'confirmed'"
+                                   options="{'no_create': True}"
+                                   string="Waste Account / حساب الهدر"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Recording Info / معلومات التسجيل">
+                            <field name="recorded_by" readonly="state == 'confirmed'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Notes / ملاحظات">
+                        <field name="notes" nolabel="1" placeholder="Add notes about this waste record..."
+                               readonly="state == 'confirmed'"/>
+                    </group>
+                    <field name="stock_move_id" invisible="1"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_ingredient_waste_list" model="ir.ui.view">
+        <field name="name">ingredient.waste.list</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <list string="Ingredient Waste"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'confirmed'"
+                  default_order="date desc, id desc">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="product_id"/>
+                <field name="quantity" sum="Total Quantity"/>
+                <field name="uom_id" string="UoM"/>
+                <field name="reason" widget="badge"
+                       decoration-danger="reason == 'expired'"
+                       decoration-warning="reason in ('spoiled', 'damaged')"
+                       decoration-info="reason == 'overproduction'"
+                       decoration-muted="reason == 'other'"/>
+                <field name="cost" sum="Total Cost"/>
+                <field name="recorded_by"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_ingredient_waste_search" model="ir.ui.view">
+        <field name="name">ingredient.waste.search</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <search string="Ingredient Waste">
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="recorded_by"/>
+                <separator/>
+                <!-- Status Filters -->
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <separator/>
+                <!-- Reason Filters -->
+                <filter name="filter_expired" string="Expired" domain="[('reason', '=', 'expired')]"/>
+                <filter name="filter_spoiled" string="Spoiled" domain="[('reason', '=', 'spoiled')]"/>
+                <filter name="filter_damaged" string="Damaged" domain="[('reason', '=', 'damaged')]"/>
+                <filter name="filter_overproduction" string="Overproduction" domain="[('reason', '=', 'overproduction')]"/>
+                <filter name="filter_other" string="Other" domain="[('reason', '=', 'other')]"/>
+                <separator/>
+                <!-- Date Filters -->
+                <filter name="filter_today" string="Today"
+                        domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_week" string="This Week"
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_month" string="This Month"
+                        domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="filter_last_30_days" string="Last 30 Days"
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_reason" string="Reason" context="{'group_by': 'reason'}"/>
+                    <filter name="group_product" string="Ingredient" context="{'group_by': 'product_id'}"/>
+                    <filter name="group_recorded_by" string="Recorded By" context="{'group_by': 'recorded_by'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'date'}"/>
+                    <filter name="group_date_month" string="Month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Graph View -->
+    <record id="view_ingredient_waste_graph" model="ir.ui.view">
+        <field name="name">ingredient.waste.graph</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <graph string="Waste Analysis" type="bar" stacked="True">
+                <field name="reason" type="row"/>
+                <field name="cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot View -->
+    <record id="view_ingredient_waste_pivot" model="ir.ui.view">
+        <field name="name">ingredient.waste.pivot</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <pivot string="Waste Analysis">
+                <field name="date" type="row" interval="month"/>
+                <field name="reason" type="col"/>
+                <field name="cost" type="measure"/>
+                <field name="quantity" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Calendar View -->
+    <record id="view_ingredient_waste_calendar" model="ir.ui.view">
+        <field name="name">ingredient.waste.calendar</field>
+        <field name="model">ingredient.waste</field>
+        <field name="arch" type="xml">
+            <calendar string="Waste Calendar" date_start="date" color="reason" mode="month">
+                <field name="product_id"/>
+                <field name="quantity"/>
+                <field name="cost"/>
+                <field name="reason"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_ingredient_waste" model="ir.actions.act_window">
+        <field name="name">Ingredient Waste / هدر المكونات</field>
+        <field name="res_model">ingredient.waste</field>
+        <field name="view_mode">list,form,graph,pivot,calendar</field>
+        <field name="search_view_id" ref="view_ingredient_waste_search"/>
+        <field name="context">{'search_default_filter_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record your first ingredient waste
+            </p>
+            <p>
+                Track ingredient waste due to expiration, spoilage, damage, or overproduction.
+                Confirmed waste records will automatically adjust inventory and post to accounting.
+            </p>
+        </field>
+    </record>
+
+    <!-- Waste Analysis Action (Graph/Pivot focused) -->
+    <record id="action_waste_analysis" model="ir.actions.act_window">
+        <field name="name">Waste Analysis</field>
+        <field name="res_model">ingredient.waste</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="search_view_id" ref="view_ingredient_waste_search"/>
+        <field name="context">{'search_default_filter_this_month': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No waste data to analyze
+            </p>
+            <p>Record ingredient waste to see analysis here.</p>
+        </field>
+    </record>
+
+    <!-- Sequence -->
+    <record id="ir_sequence_ingredient_waste" model="ir.sequence">
+        <field name="name">Ingredient Waste</field>
+        <field name="code">ingredient.waste</field>
+        <field name="prefix">WASTE/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

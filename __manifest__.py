@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Recipe & Food Costing',
-    'version': '18.0.4.1.0',
+    'version': '18.0.4.5.0',
     'category': 'Point of Sale',
     'summary': 'Restaurant recipe management with BOM/kit integration, stocktaking, and COGS tracking',
     'description': """
@@ -22,10 +22,17 @@ Recipe & Food Costing for Restaurants
     'data': [
         'security/ir.model.access.csv',
         'report/recipe_report.xml',
+        'report/recipe_variant_report.xml',
+        'report/recipe_variant_report_action.xml',
+        'report/consumption_report_template.xml',
         'views/ingredient_stocktake_views.xml',
+        'views/ingredient_waste_views.xml',
+        'views/consumption_report_views.xml',
+        'views/cost_history_views.xml',
         'wizard/quick_ingredient_views.xml',
         'wizard/quick_product_views.xml',
         'wizard/recipe_variant_setup_views.xml',
+        'wizard/recipe_variant_editor_views.xml',
         'views/product_attribute_views.xml',
         'views/dashboard_views.xml',
         'views/restaurant_recipe_views.xml',
@@ -33,6 +40,9 @@ Recipe & Food Costing for Restaurants
         'views/res_config_settings_views.xml',
         'views/menu_views.xml',
         'data/dashboard_data.xml',
+    ],
+    'demo': [
+        'data/demo_data.xml',
     ],
     'assets': {},
     'pre_init_hook': 'pre_init_hook',
