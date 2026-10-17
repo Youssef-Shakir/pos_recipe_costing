@@ -20,6 +20,7 @@ Recipe & Food Costing for Restaurants
     'website': 'https://www.donialink.com',
     'depends': ['point_of_sale', 'mrp', 'stock_account', 'uom', 'mail'],
     'data': [
+        'security/security.xml',
         'security/ir.model.access.csv',
         'report/recipe_report.xml',
         'report/recipe_variant_report.xml',

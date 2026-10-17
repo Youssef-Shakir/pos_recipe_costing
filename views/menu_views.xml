@@ -8,7 +8,7 @@
               name="Recipe &amp; Costing"
               web_icon="pos_recipe_costing,static/description/icon.png"
               sequence="35"
-              groups="point_of_sale.group_pos_user"/>
+              groups="pos_recipe_costing.group_recipe_user"/>
 
     <!-- ===================== -->
     <!-- Main Navigation Items -->
@@ -37,13 +37,15 @@
               name="Setup Variant Recipes"
               parent="menu_recipe_section"
               action="action_recipe_variant_setup"
-              sequence="20"/>
+              sequence="20"
+              groups="pos_recipe_costing.group_recipe_manager"/>
 
     <menuitem id="menu_recipe_variant_editor"
               name="Edit Variant Recipes"
               parent="menu_recipe_section"
               action="action_recipe_variant_editor"
-              sequence="30"/>
+              sequence="30"
+              groups="pos_recipe_costing.group_recipe_manager"/>
 
     <!-- 3. Products Section -->
     <menuitem id="menu_products_section"
@@ -91,7 +93,8 @@
               name="Categories"
               parent="menu_recipe_ingredients"
               action="action_ingredient_categories"
-              sequence="30"/>
+              sequence="30"
+              groups="pos_recipe_costing.group_recipe_manager"/>
 
     <!-- 5. Inventory Section -->
     <menuitem id="menu_inventory_section"
@@ -121,7 +124,8 @@
               name="BOMs / Kits"
               parent="menu_inventory_section"
               action="action_recipe_bom_list"
-              sequence="40"/>
+              sequence="40"
+              groups="pos_recipe_costing.group_recipe_manager"/>
 
     <!-- 6. Reports Section -->
     <menuitem id="menu_reports_section"
@@ -153,11 +157,12 @@
               action="action_recipe_cost_history"
               sequence="40"/>
 
-    <!-- 7. Configuration Section -->
+    <!-- 7. Configuration Section (Manager Only) -->
     <menuitem id="menu_config_section"
               name="Configuration"
               parent="menu_recipe_costing_root"
-              sequence="60"/>
+              sequence="60"
+              groups="pos_recipe_costing.group_recipe_manager"/>
 
     <menuitem id="menu_product_attributes"
               name="Product Attributes"
