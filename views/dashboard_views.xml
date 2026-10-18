@@ -531,6 +531,10 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="text-center text-muted small mt-4">
+                            Developed by <strong>Yousif Shakir</strong> ·
+                            <a href="https://www.donialink.com" target="_blank" rel="noopener">donialink.com</a>
+                        </div>
                     </div>
                 </sheet>
             </form>
