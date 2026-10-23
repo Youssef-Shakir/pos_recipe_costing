@@ -56,16 +56,18 @@ class IngredientStocktake(models.Model):
 
     notes = fields.Text(string='Notes')
 
-    total_system_value = fields.Monetary(compute='_compute_totals', string='System Value', currency_field='currency_id')
-    total_counted_value = fields.Monetary(compute='_compute_totals', string='Counted Value', currency_field='currency_id')
-    total_variance = fields.Monetary(compute='_compute_totals', string='Variance', currency_field='currency_id')
-    total_variance_value = fields.Monetary(compute='_compute_totals', string='Variance Value', currency_field='currency_id')
+    total_system_value = fields.Monetary(compute='_compute_totals', string='System Value', currency_field='currency_id', store=True)
+    total_counted_value = fields.Monetary(compute='_compute_totals', string='Counted Value', currency_field='currency_id', store=True)
+    total_variance = fields.Monetary(compute='_compute_totals', string='Variance', currency_field='currency_id', store=True)
+    total_variance_value = fields.Monetary(compute='_compute_totals', string='Variance Value', currency_field='currency_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id')
 
-    line_count = fields.Integer(compute='_compute_totals', string='Items')
-    variance_count = fields.Integer(compute='_compute_totals', string='Variances')
+    line_count = fields.Integer(compute='_compute_totals', string='Items', store=True)
+    counted_count = fields.Integer(compute='_compute_totals', string='Counted', store=True)
+    pending_count = fields.Integer(compute='_compute_totals', string='Pending', store=True)
+    variance_count = fields.Integer(compute='_compute_totals', string='Variances', store=True)
 
-    @api.depends('line_ids.system_value', 'line_ids.counted_value', 'line_ids.variance_value')
+    @api.depends('line_ids.system_value', 'line_ids.counted_value', 'line_ids.variance_value', 'line_ids.is_counted')
     def _compute_totals(self):
         for stocktake in self:
             lines = stocktake.line_ids
@@ -74,7 +76,9 @@ class IngredientStocktake(models.Model):
             stocktake.total_variance = sum(lines.mapped('variance_qty'))
             stocktake.total_variance_value = sum(lines.mapped('variance_value'))
             stocktake.line_count = len(lines)
-            stocktake.variance_count = len(lines.filtered(lambda l: l.variance_qty != 0))
+            stocktake.counted_count = len(lines.filtered(lambda l: l.is_counted))
+            stocktake.pending_count = len(lines.filtered(lambda l: not l.is_counted))
+            stocktake.variance_count = len(lines.filtered(lambda l: l.variance_qty != 0 and l.is_counted))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -90,14 +94,13 @@ class IngredientStocktake(models.Model):
         self.state = 'in_progress'
 
     def action_load_all_ingredients(self):
+        """Load all storable ingredients into the stocktake."""
         self.ensure_one()
         if self.state != 'draft':
             raise UserError(_('Can only load ingredients in draft state.'))
 
         ingredients = self.env['product.product'].search([
             ('is_ingredient', '=', True),
-            ('type', '=', 'consu'),
-            ('is_storable', '=', True),
         ])
 
         existing_products = self.line_ids.mapped('product_id')
@@ -112,6 +115,34 @@ class IngredientStocktake(models.Model):
 
         if new_lines:
             self.env['ingredient.stocktake.line'].create(new_lines)
+
+        return True
+
+    def action_load_by_category(self):
+        """Open wizard to select categories to load."""
+        self.ensure_one()
+        if self.state != 'draft':
+            raise UserError(_('Can only load ingredients in draft state.'))
+
+        return {
+            'name': _('Select Categories'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'stocktake.category.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_stocktake_id': self.id,
+            }
+        }
+
+    def action_copy_system_to_counted(self):
+        """Copy all system quantities to counted quantities as starting point."""
+        self.ensure_one()
+        if self.state != 'in_progress':
+            raise UserError(_('Can only copy quantities while counting is in progress.'))
+
+        for line in self.line_ids:
+            line.counted_qty = line.system_qty
 
         return True
 
@@ -253,14 +284,24 @@ class IngredientStocktake(models.Model):
 class IngredientStocktakeLine(models.Model):
     _name = 'ingredient.stocktake.line'
     _description = 'Ingredient Stocktake Line'
+    _order = 'product_categ_id, product_id'
 
     stocktake_id = fields.Many2one('ingredient.stocktake', string='Stocktake', required=True, ondelete='cascade')
+    sequence = fields.Integer(string='Sequence', default=10)
     product_id = fields.Many2one('product.product', string='Ingredient', required=True,
                                   domain=[('is_ingredient', '=', True)])
+    product_categ_id = fields.Many2one(related='product_id.categ_id', string='Category', store=True)
     uom_id = fields.Many2one(related='product_id.uom_id', string='UoM')
 
     system_qty = fields.Float(string='System Qty', compute='_compute_system_qty', store=True)
     counted_qty = fields.Float(string='Counted Qty', digits='Product Unit of Measure')
+    is_counted = fields.Boolean(string='Counted', default=False,
+                                 help="True if user has entered a count (even if zero)")
+    count_status = fields.Selection([
+        ('pending', 'Pending'),
+        ('counted', 'Counted'),
+        ('skipped', 'Skipped'),
+    ], string='Status', default='pending', compute='_compute_count_status', store=True)
     variance_qty = fields.Float(string='Variance', compute='_compute_variance', store=True)
 
     unit_cost = fields.Float(related='product_id.standard_price', string='Unit Cost')
@@ -280,6 +321,14 @@ class IngredientStocktakeLine(models.Model):
             else:
                 line.system_qty = 0
 
+    @api.depends('is_counted')
+    def _compute_count_status(self):
+        for line in self:
+            if line.is_counted:
+                line.count_status = 'counted'
+            else:
+                line.count_status = 'pending'
+
     @api.depends('system_qty', 'counted_qty')
     def _compute_variance(self):
         for line in self:
@@ -294,5 +343,70 @@ class IngredientStocktakeLine(models.Model):
 
     @api.onchange('product_id')
     def _onchange_product_id(self):
-        if self.product_id:
-            self.counted_qty = self.product_id.qty_available
+        """Don't auto-fill counted_qty - leave it for manual entry."""
+        pass
+
+    @api.onchange('counted_qty')
+    def _onchange_counted_qty(self):
+        """Mark as counted when user enters a value."""
+        self.is_counted = True
+
+    def action_match_system(self):
+        """Quick action: copy system qty to counted qty and mark as counted."""
+        for line in self:
+            line.counted_qty = line.system_qty
+            line.is_counted = True
+        return True
+
+    def action_mark_skipped(self):
+        """Mark item as skipped (won't be counted)."""
+        for line in self:
+            line.is_counted = True
+            line.count_status = 'skipped'
+        return True
+
+    def action_reset_count(self):
+        """Reset item to pending state."""
+        for line in self:
+            line.counted_qty = 0
+            line.is_counted = False
+        return True
+
+
+class StocktakeCategoryWizard(models.TransientModel):
+    _name = 'stocktake.category.wizard'
+    _description = 'Stocktake Category Selection Wizard'
+
+    stocktake_id = fields.Many2one('ingredient.stocktake', string='Stocktake', required=True)
+    category_ids = fields.Many2many('product.category', string='Categories',
+                                     help="Select categories to load ingredients from")
+
+    def action_load(self):
+        """Load ingredients from selected categories."""
+        self.ensure_one()
+        if not self.category_ids:
+            raise UserError(_('Please select at least one category.'))
+
+        stocktake = self.stocktake_id
+        if stocktake.state != 'draft':
+            raise UserError(_('Can only load ingredients in draft state.'))
+
+        ingredients = self.env['product.product'].search([
+            ('is_ingredient', '=', True),
+            ('categ_id', 'child_of', self.category_ids.ids),
+        ])
+
+        existing_products = stocktake.line_ids.mapped('product_id')
+        new_lines = []
+
+        for ingredient in ingredients:
+            if ingredient not in existing_products:
+                new_lines.append({
+                    'stocktake_id': stocktake.id,
+                    'product_id': ingredient.id,
+                })
+
+        if new_lines:
+            self.env['ingredient.stocktake.line'].create(new_lines)
+
+        return {'type': 'ir.actions.act_window_close'}

@@ -8,19 +8,35 @@
             <form string="Ingredient Stocktake">
                 <header>
                     <button name="action_load_all_ingredients" type="object"
-                            string="Load All Ingredients / تحميل جميع المكونات"
-                            class="btn-secondary" invisible="state != 'draft'"/>
+                            string="Load All Ingredients"
+                            class="btn-secondary" icon="fa-download"
+                            invisible="state != 'draft'"
+                            help="Load all storable ingredients"/>
+                    <button name="action_load_by_category" type="object"
+                            string="Load by Category"
+                            class="btn-secondary" icon="fa-folder-open"
+                            invisible="state != 'draft'"
+                            help="Load ingredients from specific categories"/>
                     <button name="action_start" type="object"
-                            string="Start Counting / بدء الجرد"
-                            class="btn-primary" invisible="state != 'draft'"/>
+                            string="Start Counting"
+                            class="btn-primary" icon="fa-play"
+                            invisible="state != 'draft'"
+                            confirm="Ready to start counting? System quantities will be locked."/>
+                    <button name="action_copy_system_to_counted" type="object"
+                            string="Copy System → Counted"
+                            class="btn-secondary" icon="fa-copy"
+                            invisible="state != 'in_progress'"
+                            help="Copy all system quantities to counted (starting point)"/>
                     <button name="action_validate" type="object"
-                            string="Validate / تأكيد"
-                            class="btn-success" invisible="state != 'in_progress'"/>
+                            string="Validate &amp; Post"
+                            class="btn-success" icon="fa-check"
+                            invisible="state != 'in_progress'"
+                            confirm="This will post inventory adjustments. Continue?"/>
                     <button name="action_cancel" type="object"
-                            string="Cancel / إلغاء"
+                            string="Cancel" icon="fa-times"
                             invisible="state in ('done', 'cancelled')"/>
                     <button name="action_reset_to_draft" type="object"
-                            string="Reset to Draft / إعادة للمسودة"
+                            string="Reset to Draft"
                             invisible="state != 'cancelled'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done"/>
                 </header>
@@ -33,87 +49,267 @@
                             <field name="account_move_id" widget="statinfo" string="Journal Entry"/>
                         </button>
                     </div>
+
+                    <!-- Ribbons for visual status -->
+                    <widget name="web_ribbon" title="Draft" bg_color="text-bg-secondary" invisible="state != 'draft'"/>
+                    <widget name="web_ribbon" title="Counting..." bg_color="text-bg-warning" invisible="state != 'in_progress'"/>
+                    <widget name="web_ribbon" title="Validated" bg_color="text-bg-success" invisible="state != 'done'"/>
+
                     <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
+                        <h1><field name="name" readonly="1"/></h1>
                     </div>
+
                     <group>
-                        <group>
+                        <group string="Information">
                             <field name="date" readonly="state != 'draft'"/>
-                            <field name="user_id" readonly="state != 'draft'"/>
+                            <field name="user_id" readonly="state != 'draft'" widget="many2one_avatar_user"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
-                        <group>
+                        <group string="Accounting">
                             <field name="gain_account_id"
                                    readonly="state == 'done'"
                                    options="{'no_create': True}"
-                                   string="Gain Account / حساب الأرباح"/>
+                                   placeholder="Select gain account..."/>
                             <field name="loss_account_id"
                                    readonly="state == 'done'"
                                    options="{'no_create': True}"
-                                   string="Loss Account / حساب الخسائر"/>
+                                   placeholder="Select loss account..."/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
 
+                    <!-- Summary Cards -->
                     <div class="row mb-3" invisible="state == 'draft'">
-                        <div class="col-md-2">
-                            <div class="text-center p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px;">
-                                <h3 class="text-white mb-0"><field name="line_count" readonly="1"/></h3>
-                                <small class="text-white">Items / عناصر</small>
+                        <!-- Progress: Counted / Total -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                <div class="card-body py-3">
+                                    <h3 class="text-white mb-0">
+                                        <field name="counted_count" readonly="1"/>/<field name="line_count" readonly="1"/>
+                                    </h3>
+                                    <small class="text-white-50">Counted</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="text-center p-3" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 10px;">
-                                <h3 class="text-white mb-0"><field name="total_system_value" readonly="1" widget="monetary"/></h3>
-                                <small class="text-white">System / النظام</small>
+                        <!-- Pending items -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                                <div class="card-body py-3">
+                                    <h3 class="mb-0" style="color: #c44d34;"><field name="pending_count" readonly="1"/></h3>
+                                    <small style="color: #c44d34;">Pending</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="text-center p-3" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); border-radius: 10px;">
-                                <h3 class="text-white mb-0"><field name="total_counted_value" readonly="1" widget="monetary"/></h3>
-                                <small class="text-white">Counted / الفعلي</small>
+                        <!-- System Value -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="card-body py-3">
+                                    <h5 class="text-white mb-0"><field name="total_system_value" readonly="1" widget="monetary"/></h5>
+                                    <small class="text-white-50">System</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center p-3" style="background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); border-radius: 10px;">
-                                <h3 class="text-white mb-0"><field name="total_variance_value" readonly="1" widget="monetary"/></h3>
-                                <small class="text-white">Variance / الفرق</small>
+                        <!-- Counted Value -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);">
+                                <div class="card-body py-3">
+                                    <h5 class="text-white mb-0"><field name="total_counted_value" readonly="1" widget="monetary"/></h5>
+                                    <small class="text-white-50">Counted Val</small>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center p-3" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 10px;">
-                                <h3 class="text-white mb-0"><field name="variance_count" readonly="1"/></h3>
-                                <small class="text-white">Variances / فروقات</small>
+                        <!-- Variance -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);">
+                                <div class="card-body py-3">
+                                    <h5 class="text-white mb-0"><field name="total_variance_value" readonly="1" widget="monetary"/></h5>
+                                    <small class="text-white-50">Variance</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Variance Count -->
+                        <div class="col-lg-2 col-md-4 col-6 mb-2">
+                            <div class="card text-center border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                <div class="card-body py-3">
+                                    <h3 class="text-white mb-0"><field name="variance_count" readonly="1"/></h3>
+                                    <small class="text-white-50">Variances</small>
+                                </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Help alert during counting -->
+                    <div class="alert alert-info d-flex align-items-center mb-3" invisible="state != 'in_progress'">
+                        <i class="fa fa-info-circle fa-lg me-2"/>
+                        <div>
+                            <strong>Counting Mode:</strong> Enter counted quantities.
+                            Click <i class="fa fa-check-circle text-success"/> to match system qty.
+                        </div>
+                    </div>
+
                     <notebook>
-                        <page string="Count Lines / سطور الجرد" name="lines">
+                        <page string="Count Sheet" name="lines" icon="fa-list-ol">
                             <field name="line_ids" readonly="state == 'done'">
-                                <list editable="bottom" decoration-danger="variance_qty &lt; 0" decoration-success="variance_qty &gt; 0">
-                                    <field name="product_id" readonly="parent.state != 'draft'"/>
-                                    <field name="uom_id" readonly="1"/>
-                                    <field name="system_qty" readonly="1" sum="Total System"/>
-                                    <field name="counted_qty" sum="Total Counted"/>
-                                    <field name="variance_qty" readonly="1" sum="Total Variance"
+                                <list editable="bottom"
+                                      decoration-danger="variance_qty &lt; 0 and is_counted"
+                                      decoration-success="variance_qty &gt; 0 and is_counted"
+                                      decoration-warning="not is_counted"
+                                      decoration-muted="is_counted and variance_qty == 0">
+                                    <field name="product_categ_id" column_invisible="1"/>
+                                    <field name="is_counted" column_invisible="1"/>
+                                    <!-- Status indicator -->
+                                    <field name="count_status" widget="badge" string=""
+                                           decoration-warning="count_status == 'pending'"
+                                           decoration-success="count_status == 'counted'"
+                                           decoration-muted="count_status == 'skipped'"
+                                           optional="show"/>
+                                    <field name="product_id"
+                                           readonly="parent.state != 'draft'"
+                                           string="Ingredient"
+                                           options="{'no_create': True}"/>
+                                    <field name="uom_id" readonly="1" string="Unit" optional="show"/>
+                                    <field name="system_qty" readonly="1" string="System"/>
+                                    <field name="counted_qty" string="Counted"
+                                           decoration-bf="is_counted"
+                                           readonly="parent.state == 'done'"/>
+                                    <!-- Quick action buttons -->
+                                    <button name="action_match_system" type="object"
+                                            string="" icon="fa-check-circle"
+                                            title="Match: Set counted = system"
+                                            class="btn-link text-success p-0"
+                                            invisible="parent.state != 'in_progress'"/>
+                                    <button name="action_reset_count" type="object"
+                                            string="" icon="fa-undo"
+                                            title="Reset to pending"
+                                            class="btn-link text-warning p-0"
+                                            invisible="parent.state != 'in_progress' or not is_counted"/>
+                                    <field name="variance_qty" readonly="1" string="Diff"
                                            decoration-danger="variance_qty &lt; 0"
-                                           decoration-success="variance_qty &gt; 0"/>
-                                    <field name="unit_cost" readonly="1"/>
-                                    <field name="system_value" readonly="1" sum="System Value"/>
-                                    <field name="counted_value" readonly="1" sum="Counted Value"/>
-                                    <field name="variance_value" readonly="1" sum="Variance Value"
+                                           decoration-success="variance_qty &gt; 0"
+                                           decoration-bf="variance_qty != 0 and is_counted"
+                                           decoration-muted="not is_counted"/>
+                                    <field name="unit_cost" readonly="1" string="Cost" optional="hide"/>
+                                    <field name="system_value" readonly="1" string="Sys Val" optional="hide"/>
+                                    <field name="counted_value" readonly="1" string="Cnt Val" optional="hide"/>
+                                    <field name="variance_value" readonly="1" string="Var $"
                                            decoration-danger="variance_value &lt; 0"
-                                           decoration-success="variance_value &gt; 0"/>
+                                           decoration-success="variance_value &gt; 0"
+                                           sum="Total Variance"
+                                           optional="show"/>
+                                    <field name="notes" string="Note" placeholder="..." optional="show"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- Quick Entry Kanban for mobile/tablet -->
+                        <page string="Quick Entry" name="quick_entry" icon="fa-th-large" invisible="state != 'in_progress'">
+                            <div class="alert alert-secondary mb-3">
+                                <i class="fa fa-tablet me-2"/>
+                                <strong>Touch-friendly mode:</strong> Large cards for tablet/mobile counting.
+                                <span class="badge text-bg-warning ms-2">Pending</span> = not yet counted
+                                <span class="badge text-bg-success ms-2">Counted</span> = done
+                            </div>
+                            <field name="line_ids" mode="kanban">
+                                <kanban class="o_kanban_mobile">
+                                    <field name="product_id"/>
+                                    <field name="product_categ_id"/>
+                                    <field name="uom_id"/>
+                                    <field name="system_qty"/>
+                                    <field name="counted_qty"/>
+                                    <field name="variance_qty"/>
+                                    <field name="is_counted"/>
+                                    <field name="count_status"/>
+                                    <templates>
+                                        <t t-name="card" t-attf-class="flex-row #{!record.is_counted.raw_value ? 'border-warning border-2' : ''}">
+                                            <aside class="d-flex flex-column align-items-center justify-content-center pe-3" style="min-width: 70px;">
+                                                <t t-if="record.is_counted.raw_value">
+                                                    <div t-attf-class="badge rounded-pill fs-5 px-3 py-2 #{record.variance_qty.raw_value &lt; 0 ? 'text-bg-danger' : (record.variance_qty.raw_value > 0 ? 'text-bg-success' : 'text-bg-secondary')}">
+                                                        <t t-out="record.variance_qty.value"/>
+                                                    </div>
+                                                    <small class="text-muted mt-1">diff</small>
+                                                </t>
+                                                <t t-else="">
+                                                    <div class="badge rounded-pill fs-6 px-3 py-2 text-bg-warning">
+                                                        <i class="fa fa-clock-o"/>
+                                                    </div>
+                                                    <small class="text-warning mt-1 fw-bold">PENDING</small>
+                                                </t>
+                                            </aside>
+                                            <main class="flex-grow-1">
+                                                <strong class="fs-5"><field name="product_id"/></strong>
+                                                <div class="text-muted small"><field name="product_categ_id"/></div>
+                                                <div class="row mt-2">
+                                                    <div class="col-6">
+                                                        <small class="text-muted">System</small>
+                                                        <div class="fs-5 text-muted">
+                                                            <field name="system_qty"/> <field name="uom_id"/>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <small class="text-muted">Counted</small>
+                                                        <div t-attf-class="fs-4 fw-bold #{record.is_counted.raw_value ? 'text-primary' : 'text-warning'}">
+                                                            <field name="counted_qty" widget="float"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </main>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </page>
+
+                        <!-- Pending tab - items not yet counted -->
+                        <page string="Pending" name="pending" icon="fa-clock-o"
+                              invisible="state != 'in_progress' or pending_count == 0">
+                            <div class="alert alert-warning mb-3">
+                                <i class="fa fa-clock-o me-2"/>
+                                <strong><field name="pending_count" readonly="1"/> items remaining.</strong>
+                                These items have not been counted yet.
+                            </div>
+                            <field name="line_ids" domain="[('is_counted', '=', False)]">
+                                <list editable="bottom" decoration-warning="1">
+                                    <field name="is_counted" column_invisible="1"/>
+                                    <field name="product_id" readonly="1" string="Ingredient"/>
+                                    <field name="product_categ_id" string="Category"/>
+                                    <field name="uom_id" readonly="1" string="Unit"/>
+                                    <field name="system_qty" readonly="1" string="System"/>
+                                    <field name="counted_qty" string="Counted" decoration-bf="1"/>
+                                    <button name="action_match_system" type="object"
+                                            string="" icon="fa-check-circle"
+                                            title="Match system qty"
+                                            class="btn-link text-success p-0"/>
+                                    <field name="notes" string="Note" placeholder="..."/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- Variances tab -->
+                        <page string="Variances" name="variances" icon="fa-exclamation-triangle"
+                              invisible="state == 'draft' or variance_count == 0">
+                            <div class="alert alert-warning mb-3">
+                                <i class="fa fa-exclamation-triangle me-2"/>
+                                <strong>Review:</strong> Items below have discrepancies.
+                            </div>
+                            <field name="line_ids" readonly="1" domain="[('variance_qty', '!=', 0), ('is_counted', '=', True)]">
+                                <list decoration-danger="variance_qty &lt; 0" decoration-success="variance_qty &gt; 0" create="0">
+                                    <field name="product_id"/>
+                                    <field name="product_categ_id" string="Category"/>
+                                    <field name="uom_id"/>
+                                    <field name="system_qty"/>
+                                    <field name="counted_qty"/>
+                                    <field name="variance_qty" decoration-bf="1"/>
+                                    <field name="variance_value" sum="Total" decoration-bf="1"/>
                                     <field name="notes"/>
                                     <field name="currency_id" column_invisible="1"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Notes / ملاحظات" name="notes">
-                            <field name="notes" placeholder="Add notes about this stocktake..."/>
+
+                        <page string="Notes" name="notes" icon="fa-sticky-note">
+                            <field name="notes" nolabel="1" placeholder="Add notes about this stocktake session..."/>
                         </page>
                     </notebook>
                 </sheet>
@@ -126,17 +322,22 @@
         <field name="name">ingredient.stocktake.list</field>
         <field name="model">ingredient.stocktake</field>
         <field name="arch" type="xml">
-            <list string="Stocktakes" decoration-info="state == 'draft'" decoration-warning="state == 'in_progress'" decoration-success="state == 'done'" decoration-muted="state == 'cancelled'">
+            <list string="Stocktakes"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'in_progress'"
+                  decoration-success="state == 'done'"
+                  decoration-muted="state == 'cancelled'"
+                  default_order="date desc, id desc">
                 <field name="name"/>
                 <field name="date"/>
-                <field name="user_id"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
                 <field name="line_count" string="Items"/>
-                <field name="total_system_value" sum="System Total"/>
-                <field name="total_counted_value" sum="Counted Total"/>
-                <field name="total_variance_value" sum="Variance Total"
+                <field name="total_system_value" string="System" sum="Total"/>
+                <field name="total_counted_value" string="Counted" sum="Total"/>
+                <field name="total_variance_value" string="Variance" sum="Total"
                        decoration-danger="total_variance_value &lt; 0"
                        decoration-success="total_variance_value &gt; 0"/>
-                <field name="variance_count" string="Variances"/>
+                <field name="variance_count" string="# Var"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'draft'"
                        decoration-warning="state == 'in_progress'"
@@ -147,6 +348,53 @@
         </field>
     </record>
 
+    <!-- Kanban View -->
+    <record id="view_ingredient_stocktake_kanban" model="ir.ui.view">
+        <field name="name">ingredient.stocktake.kanban</field>
+        <field name="model">ingredient.stocktake</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="state">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="user_id"/>
+                <field name="state"/>
+                <field name="line_count"/>
+                <field name="variance_count"/>
+                <field name="total_variance_value"/>
+                <progressbar field="state" colors='{"draft": "secondary", "in_progress": "warning", "done": "success", "cancelled": "danger"}'/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong><field name="name"/></strong>
+                            <field name="state" widget="badge"
+                                   decoration-info="state == 'draft'"
+                                   decoration-warning="state == 'in_progress'"
+                                   decoration-success="state == 'done'"
+                                   decoration-danger="state == 'cancelled'"/>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="fa fa-calendar me-1"/><field name="date"/>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span><i class="fa fa-cubes me-1"/><field name="line_count"/> items</span>
+                            <span t-attf-class="badge #{record.variance_count.raw_value > 0 ? 'text-bg-warning' : 'text-bg-success'}">
+                                <field name="variance_count"/> var
+                            </span>
+                        </div>
+                        <div class="mt-2" t-if="record.total_variance_value.raw_value != 0">
+                            <span t-attf-class="fw-bold #{record.total_variance_value.raw_value &lt; 0 ? 'text-danger' : 'text-success'}">
+                                <field name="total_variance_value" widget="monetary"/>
+                            </span>
+                        </div>
+                        <footer class="pt-2 mt-2 border-top">
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="view_ingredient_stocktake_search" model="ir.ui.view">
         <field name="name">ingredient.stocktake.search</field>
         <field name="model">ingredient.stocktake</field>
@@ -154,25 +402,33 @@
             <search string="Stocktakes">
                 <field name="name"/>
                 <field name="user_id"/>
+                <separator/>
+                <filter name="filter_my" string="My Stocktakes" domain="[('user_id', '=', uid)]"/>
+                <separator/>
                 <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="filter_in_progress" string="In Progress" domain="[('state', '=', 'in_progress')]"/>
                 <filter name="filter_done" string="Validated" domain="[('state', '=', 'done')]"/>
                 <separator/>
+                <filter name="filter_has_variance" string="Has Variances" domain="[('variance_count', '>', 0)]"/>
+                <filter name="filter_loss" string="With Losses" domain="[('total_variance_value', '&lt;', 0)]"/>
+                <separator/>
                 <filter name="filter_today" string="Today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
-                <filter name="filter_this_month" string="This Month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter name="filter_this_week" string="This Week" domain="[('date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_month" string="This Month" domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_user" string="Responsible" context="{'group_by': 'user_id'}"/>
-                    <filter name="group_date" string="Date" context="{'group_by': 'date'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'date:day'}"/>
+                    <filter name="group_month" string="Month" context="{'group_by': 'date:month'}"/>
                 </group>
             </search>
         </field>
     </record>
 
     <record id="action_ingredient_stocktake" model="ir.actions.act_window">
-        <field name="name">Ingredient Stocktake / جرد المكونات</field>
+        <field name="name">Ingredient Stocktake</field>
         <field name="res_model">ingredient.stocktake</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_ingredient_stocktake_search"/>
         <field name="context">{'search_default_filter_draft': 1, 'search_default_filter_in_progress': 1}</field>
         <field name="help" type="html">
@@ -182,7 +438,37 @@
             <p>
                 Count your ingredient inventory and automatically post adjustments to accounting.
             </p>
+            <p class="text-muted">
+                <i class="fa fa-lightbulb-o me-1"/>
+                Tip: Use "Load All Ingredients" to quickly populate the count sheet.
+            </p>
         </field>
+    </record>
+
+    <!-- Category Selection Wizard -->
+    <record id="view_stocktake_category_wizard_form" model="ir.ui.view">
+        <field name="name">stocktake.category.wizard.form</field>
+        <field name="model">stocktake.category.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Select Categories">
+                <group>
+                    <field name="stocktake_id" invisible="1"/>
+                    <field name="category_ids" widget="many2many_tags"
+                           placeholder="Select categories to load..."/>
+                </group>
+                <footer>
+                    <button name="action_load" type="object" string="Load Ingredients" class="btn-primary" icon="fa-download"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_stocktake_category_wizard" model="ir.actions.act_window">
+        <field name="name">Select Categories</field>
+        <field name="res_model">stocktake.category.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
     </record>
 
     <record id="ir_sequence_ingredient_stocktake" model="ir.sequence">
@@ -191,6 +477,102 @@
         <field name="prefix">STK/%(year)s/</field>
         <field name="padding">4</field>
         <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- ===================== -->
+    <!-- Stocktake LINE Form (Phone-Friendly) -->
+    <!-- ===================== -->
+    <record id="view_ingredient_stocktake_line_form" model="ir.ui.view">
+        <field name="name">ingredient.stocktake.line.form</field>
+        <field name="model">ingredient.stocktake.line</field>
+        <field name="arch" type="xml">
+            <form string="Count Item">
+                <!-- Hidden fields -->
+                <field name="stocktake_id" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="is_counted" invisible="1"/>
+
+                <sheet>
+                    <!-- Big ingredient name at top -->
+                    <div class="oe_title">
+                        <h1 class="mb-0">
+                            <field name="product_id" readonly="1" options="{'no_open': True}"/>
+                        </h1>
+                        <h4 class="text-muted">
+                            <field name="product_categ_id" readonly="1"/> · <field name="uom_id" readonly="1"/>
+                        </h4>
+                    </div>
+
+                    <!-- Main counting section - BIG and easy to tap -->
+                    <div class="row mt-4">
+                        <!-- System Qty (Reference) -->
+                        <div class="col-6 text-center">
+                            <div class="p-3 rounded" style="background: #f8f9fa;">
+                                <span class="o_form_label text-muted small d-block mb-1">System Qty</span>
+                                <h2 class="mb-0 text-muted">
+                                    <field name="system_qty" readonly="1"/>
+                                </h2>
+                            </div>
+                        </div>
+                        <!-- Counted Qty (INPUT - Main Action) -->
+                        <div class="col-6 text-center">
+                            <div class="p-3 rounded border border-primary border-2" style="background: #e7f1ff;">
+                                <span class="o_form_label text-primary small d-block mb-1 fw-bold">COUNTED</span>
+                                <field name="counted_qty" class="fs-1 fw-bold text-center border-0 bg-transparent w-100"
+                                       style="font-size: 2.5rem !important; text-align: center;"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Match Button -->
+                    <div class="text-center mt-3">
+                        <button name="action_match_system" type="object"
+                                string="Match System Qty"
+                                class="btn btn-lg btn-outline-success"
+                                icon="fa-check-circle"
+                                help="Set counted = system qty"/>
+                    </div>
+
+                    <!-- Variance Display -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="p-3 rounded text-center" style="background: #fff3cd;">
+                                <span class="o_form_label text-muted small d-block mb-1">Difference</span>
+                                <h3 class="mb-0">
+                                    <field name="variance_qty" readonly="1"
+                                           decoration-danger="variance_qty &lt; 0"
+                                           decoration-success="variance_qty &gt; 0"/>
+                                </h3>
+                                <small class="text-muted">
+                                    <field name="variance_value" widget="monetary" readonly="1"/>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes (collapsible/optional) -->
+                    <group class="mt-3">
+                        <field name="notes" placeholder="Add note (optional)..." string="Notes"/>
+                    </group>
+
+                    <!-- Status indicator -->
+                    <div class="text-center mt-3">
+                        <field name="count_status" widget="badge" readonly="1"
+                               decoration-warning="count_status == 'pending'"
+                               decoration-success="count_status == 'counted'"
+                               decoration-muted="count_status == 'skipped'"/>
+                    </div>
+
+                    <!-- Hidden technical fields -->
+                    <group invisible="1">
+                        <field name="sequence"/>
+                        <field name="unit_cost"/>
+                        <field name="system_value"/>
+                        <field name="counted_value"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
     </record>
 
 </odoo>
