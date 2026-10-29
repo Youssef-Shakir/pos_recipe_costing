@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- On every install / upgrade: copy the stocktake and waste accounts from Settings
+         onto the Inventory adjustment and Scrap locations (see stock_location.py) -->
+    <function model="stock.location" name="_recipe_sync_adjustment_accounts"/>
+</odoo>

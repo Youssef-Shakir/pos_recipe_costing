@@ -31,7 +31,7 @@
                             string="Validate &amp; Post"
                             class="btn-success" icon="fa-check"
                             invisible="state != 'in_progress'"
-                            confirm="This will post inventory adjustments. Continue?"/>
+                            confirm="This applies the counted differences to stock, dated on the stocktake date, and Odoo posts them to the gain / loss accounts. Continue?"/>
                     <button name="action_cancel" type="object"
                             string="Cancel" icon="fa-times"
                             invisible="state in ('done', 'cancelled')"/>
@@ -47,6 +47,11 @@
                                 invisible="not account_move_id"
                                 context="{'search_default_id': account_move_id}">
                             <field name="account_move_id" widget="statinfo" string="Journal Entry"/>
+                        </button>
+                        <button name="action_view_valuation_entries" type="object"
+                                class="oe_stat_button" icon="fa-book"
+                                invisible="not valuation_move_count">
+                            <field name="valuation_move_count" widget="statinfo" string="Entries"/>
                         </button>
                     </div>
 
@@ -66,14 +71,11 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                         <group string="Accounting">
-                            <field name="gain_account_id"
-                                   readonly="state == 'done'"
-                                   options="{'no_create': True}"
-                                   placeholder="Select gain account..."/>
-                            <field name="loss_account_id"
-                                   readonly="state == 'done'"
-                                   options="{'no_create': True}"
-                                   placeholder="Select loss account..."/>
+                            <!-- From Settings: Odoo posts on the Inventory adjustment location's accounts -->
+                            <field name="gain_account_id" readonly="1"
+                                   help="From Settings › Stocktake Accounts. Odoo posts surpluses here."/>
+                            <field name="loss_account_id" readonly="1"
+                                   help="From Settings › Stocktake Accounts. Odoo posts shortages here."/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
@@ -446,6 +448,26 @@
     </record>
 
     <!-- Category Selection Wizard -->
+    <record id="view_stocktake_check_wizard_form" model="ir.ui.view">
+        <field name="name">ingredient.stocktake.check.wizard.form</field>
+        <field name="model">ingredient.stocktake.check.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Check before validating">
+                <div class="alert alert-warning" role="alert">
+                    These lines look wrong. A unit-of-measure mistake or a wrong cost posts the wrong value.
+                    Fix the cost or count first, or validate anyway.
+                    <br/>هذه الأسطر تبدو غير صحيحة. صحّح الكلفة أو العدّ أولاً، أو اعتمد على أي حال.
+                </div>
+                <field name="message" nolabel="1"/>
+                <footer>
+                    <button name="action_validate_anyway" type="object" string="Validate anyway / اعتماد على أي حال"
+                            class="btn-primary"/>
+                    <button string="Back to the count / رجوع" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
     <record id="view_stocktake_category_wizard_form" model="ir.ui.view">
         <field name="name">stocktake.category.wizard.form</field>
         <field name="model">stocktake.category.wizard</field>

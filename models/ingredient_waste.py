@@ -143,14 +143,9 @@ class IngredientWaste(models.Model):
         if self.quantity <= 0:
             raise UserError(_('Quantity must be greater than zero.'))
 
-        if not self.waste_account_id:
-            raise UserError(_('Please configure a Waste Account in Settings or select one here.'))
-
-        # Create stock adjustment
+        # One posting, made by Odoo: the scrap moves the stock to the Scrap location,
+        # whose accounts (set from Settings) receive the waste expense
         self._create_stock_adjustment()
-
-        # Create accounting entry
-        self._create_account_move()
 
         self.state = 'confirmed'
         return True
@@ -193,91 +188,37 @@ class IngredientWaste(models.Model):
         if not scrap_location:
             raise UserError(_('No scrap location found. Please configure a scrap location.'))
 
-        # Update stock using quants (similar to stocktake approach)
-        StockQuant = self.env['stock.quant']
-
-        quant = StockQuant.search([
-            ('product_id', '=', self.product_id.id),
-            ('location_id', '=', stock_location.id),
-        ], limit=1)
-
-        if quant:
-            current_qty = quant.quantity
-            new_qty = current_qty - self.quantity
-            if new_qty < 0:
-                new_qty = 0  # Don't go negative
-
-            quant.with_context(inventory_mode=True).write({
-                'inventory_quantity': new_qty,
-            })
-            quant.action_apply_inventory()
-        else:
-            # No existing quant - nothing to reduce
-            pass
-
-    def _create_account_move(self):
-        """Create journal entry for waste expense"""
-        self.ensure_one()
-
-        if self.cost <= 0:
-            return  # No cost to record
-
-        journal = self.env['account.journal'].search([
-            ('type', '=', 'general'),
-            ('company_id', '=', self.company_id.id)
-        ], limit=1)
-
-        if not journal:
-            raise UserError(_('No general journal found for posting waste entries.'))
-
-        # Get stock interim account from product category
-        categ = self.product_id.categ_id
-        stock_output_account = categ.property_stock_account_output_categ_id
-
-        if not stock_output_account:
-            raise UserError(_(
-                'Please configure Stock Interim (Delivered) account on product category "%s".'
-            ) % categ.name)
+        self.env['stock.location']._recipe_sync_adjustment_accounts()
+        if not scrap_location.valuation_in_account_id:
+            raise UserError(_('Set the Waste Expense Account in Settings › Recipe Costing › Waste Tracking. '
+                              'It is used for the location "%s".', scrap_location.complete_name))
 
         reason_labels = dict(self._fields['reason'].selection)
-        reason_label = reason_labels.get(self.reason, self.reason)
-
-        move_lines = [
-            # Debit: Waste Expense Account
-            (0, 0, {
-                'name': _('Waste: %s (%s)') % (self.product_id.name, reason_label),
-                'account_id': self.waste_account_id.id,
-                'debit': self.cost,
-                'credit': 0,
-            }),
-            # Credit: Stock Interim (Delivered) Account
-            (0, 0, {
-                'name': _('Waste: %s (%s)') % (self.product_id.name, reason_label),
-                'account_id': stock_output_account.id,
-                'debit': 0,
-                'credit': self.cost,
-            }),
-        ]
-
-        account_move = self.env['account.move'].create({
-            'journal_id': journal.id,
-            'date': self.date,
-            'ref': _('Waste: %s') % self.name,
-            'line_ids': move_lines,
+        scrap = self.env['stock.scrap'].create({
+            'product_id': self.product_id.id,
+            'product_uom_id': self.product_id.uom_id.id,
+            'scrap_qty': self.quantity,
+            'location_id': stock_location.id,
+            'scrap_location_id': scrap_location.id,
+            'company_id': self.company_id.id,
+            'origin': '%s (%s)' % (self.name, reason_labels.get(self.reason, self.reason)),
         })
-        account_move.action_post()
-        self.account_move_id = account_move
+        # do_scrap skips the "not enough stock" wizard; the entry is dated on the waste date
+        scrap.with_context(force_period_date=self.date).do_scrap()
+        self.stock_move_id = scrap.move_ids[:1]
 
     def action_view_journal_entry(self):
         """Open the related journal entry"""
         self.ensure_one()
-        if not self.account_move_id:
+        # Records confirmed before 18.0.4.6.0 have their own entry, newer ones the scrap's
+        moves = self.account_move_id | self.stock_move_id.account_move_ids
+        if not moves:
             raise UserError(_('No journal entry has been created yet.'))
         return {
             'type': 'ir.actions.act_window',
             'name': _('Journal Entry'),
             'res_model': 'account.move',
             'view_mode': 'form',
-            'res_id': self.account_move_id.id,
+            'res_id': moves[:1].id,
             'target': 'current',
         }

@@ -46,15 +46,21 @@
                         </setting>
                     </block>
                     <block title="Stocktake Accounts / حسابات الجرد" name="stocktake_accounts">
-                        <setting string="Inventory Gain Account / حساب أرباح المخزون" help="Account for positive variances (counted > system)">
+                        <setting string="Inventory Gain Account / حساب أرباح المخزون" help="Surpluses (counted > system). Saved on the location Virtual Locations/Inventory adjustment (Outgoing), so Odoo posts every count difference here directly.">
                             <field name="stocktake_gain_account_id"/>
                         </setting>
-                        <setting string="Inventory Loss Account / حساب خسائر المخزون" help="Account for negative variances (counted &lt; system)">
+                        <setting string="Inventory Loss Account / حساب خسائر المخزون" help="Shortages (counted &lt; system). Saved on the location Virtual Locations/Inventory adjustment (Incoming).">
                             <field name="stocktake_loss_account_id"/>
+                        </setting>
+                        <setting string="Check: max value per ingredient / الحد الأعلى لقيمة المادة" help="Validating a stocktake warns when one ingredient's value or difference is above this amount.">
+                            <field name="stocktake_max_line_value"/>
+                        </setting>
+                        <setting string="Check: cost vs last purchase (x) / الكلفة مقابل آخر شراء" help="Validating a stocktake warns when a unit cost is this many times above or below the last purchase price (per the ingredient's unit).">
+                            <field name="stocktake_cost_ratio"/>
                         </setting>
                     </block>
                     <block title="Waste Tracking / تتبع الهدر" name="waste_tracking">
-                        <setting string="Waste Expense Account / حساب مصروفات الهدر" help="Account for recording waste expenses (expired, spoiled, damaged ingredients)">
+                        <setting string="Waste Expense Account / حساب مصروفات الهدر" help="Saved on the location Virtual Locations/Scrap, so Odoo posts waste (scrap) here directly.">
                             <field name="waste_account_id"/>
                         </setting>
                     </block>

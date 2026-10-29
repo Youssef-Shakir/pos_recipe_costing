@@ -36,7 +36,10 @@ class IngredientStocktake(models.Model):
         default=lambda self: self._default_loss_account(),
         help="Account for inventory losses (counted < system)"
     )
+    # Stocktakes validated before 18.0.4.6.0 posted their own entry; newer ones only adjust stock
     account_move_id = fields.Many2one('account.move', string='Journal Entry', readonly=True)
+    stock_move_ids = fields.Many2many('stock.move', string='Stock Moves', readonly=True, copy=False)
+    valuation_move_count = fields.Integer(compute='_compute_valuation_move_count', string='Entries')
 
     @api.model
     def _default_gain_account(self):
@@ -80,6 +83,21 @@ class IngredientStocktake(models.Model):
             stocktake.pending_count = len(lines.filtered(lambda l: not l.is_counted))
             stocktake.variance_count = len(lines.filtered(lambda l: l.variance_qty != 0 and l.is_counted))
 
+    @api.depends('stock_move_ids.account_move_ids')
+    def _compute_valuation_move_count(self):
+        for stocktake in self:
+            stocktake.valuation_move_count = len(stocktake.stock_move_ids.account_move_ids)
+
+    def action_view_valuation_entries(self):
+        self.ensure_one()
+        return {
+            'name': _('Stocktake Entries'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', self.stock_move_ids.account_move_ids.ids)],
+        }
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -91,6 +109,9 @@ class IngredientStocktake(models.Model):
         self.ensure_one()
         if not self.line_ids:
             raise UserError(_('Please add ingredients to count before starting.'))
+        # The snapshot the count is compared with is taken now, not when the lines were loaded
+        for line in self.line_ids:
+            line.system_qty = line.product_id.qty_available
         self.state = 'in_progress'
 
     def action_load_all_ingredients(self):
@@ -151,122 +172,106 @@ class IngredientStocktake(models.Model):
         if self.state != 'in_progress':
             raise UserError(_('Stocktake must be in progress to validate.'))
 
-        lines_with_variance = self.line_ids.filtered(lambda l: l.variance_qty != 0)
-        lines_with_gain = lines_with_variance.filtered(lambda l: l.variance_qty > 0)
-        lines_with_loss = lines_with_variance.filtered(lambda l: l.variance_qty < 0)
+        issues = self._get_plausibility_issues()
+        if issues and not self.env.context.get('stocktake_skip_checks'):
+            wizard = self.env['ingredient.stocktake.check.wizard'].create({
+                'stocktake_id': self.id,
+                'message': '\n'.join(issues),
+            })
+            return {
+                'name': _('Check before validating'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'ingredient.stocktake.check.wizard',
+                'res_id': wizard.id,
+                'view_mode': 'form',
+                'target': 'new',
+            }
 
-        if lines_with_gain and not self.gain_account_id:
-            raise UserError(_('Please configure Inventory Gain Account in Settings or select one here.'))
-
-        if lines_with_loss and not self.loss_account_id:
-            raise UserError(_('Please configure Inventory Loss Account in Settings or select one here.'))
-
-        if lines_with_variance:
-            self._create_inventory_adjustment()
-            self._create_account_move()
+        lines = self._lines_to_apply()
+        if lines:
+            self._check_adjustment_accounts(lines)
+            self._apply_counted_quantities(lines)
 
         self.state = 'done'
+        return True
 
-    def _create_inventory_adjustment(self):
-        """Adjust inventory using stock.quant"""
+    def _lines_to_apply(self):
+        # Only counted lines move stock: a pending or skipped line has no count, not a count of 0
+        return self.line_ids.filtered(
+            lambda l: l.is_counted and l.count_status != 'skipped' and l.variance_qty != 0)
+
+    def _check_adjustment_accounts(self, lines):
+        """Odoo posts the differences on the Inventory adjustment location's accounts.
+        Without them it would fall back to Stock Incoming / Outgoing, the purchase and POS
+        clearing accounts, which is what this module must not touch."""
+        self.env['stock.location']._recipe_sync_adjustment_accounts()
+        for location in lines.product_id.with_company(self.company_id).mapped('property_stock_inventory'):
+            if lines.filtered(lambda l: l.variance_qty > 0) and not location.valuation_out_account_id:
+                raise UserError(_('Set the Inventory Gain Account in Settings › Recipe Costing › Stocktake Accounts. '
+                                  'It is used for the location "%s".', location.complete_name))
+            if lines.filtered(lambda l: l.variance_qty < 0) and not location.valuation_in_account_id:
+                raise UserError(_('Set the Inventory Loss Account in Settings › Recipe Costing › Stocktake Accounts. '
+                                  'It is used for the location "%s".', location.complete_name))
+
+    def _apply_counted_quantities(self, lines):
+        """One posting per difference, made by Odoo on the count date.
+
+        The difference (counted - snapshot at the start of the count) is added to the
+        stock of now, so sales and receipts since the count are kept."""
         warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.company_id.id)], limit=1)
-        if not warehouse:
-            return
-
+        if not warehouse.lot_stock_id:
+            raise UserError(_('No warehouse stock location found for %s.', self.company_id.name))
         stock_location = warehouse.lot_stock_id
-        if not stock_location:
-            return
 
-        StockQuant = self.env['stock.quant']
-
-        for line in self.line_ids.filtered(lambda l: l.variance_qty != 0):
-            product = line.product_id
-
-            # Find or create quant for this product/location
+        StockQuant = self.env['stock.quant'].with_context(inventory_mode=True)
+        quants = StockQuant.browse()
+        for line in lines:
             quant = StockQuant.search([
-                ('product_id', '=', product.id),
+                ('product_id', '=', line.product_id.id),
                 ('location_id', '=', stock_location.id),
+                ('lot_id', '=', False),
+                ('package_id', '=', False),
+                ('owner_id', '=', False),
             ], limit=1)
-
-            if quant:
-                # Update existing quant with inventory adjustment
-                quant.with_context(inventory_mode=True).write({
-                    'inventory_quantity': line.counted_qty,
-                })
-                quant.action_apply_inventory()
-            else:
-                # Create new quant with counted quantity
-                quant = StockQuant.with_context(inventory_mode=True).create({
-                    'product_id': product.id,
-                    'location_id': stock_location.id,
-                    'inventory_quantity': line.counted_qty,
-                })
-                quant.action_apply_inventory()
-
-    def _create_account_move(self):
-        lines_with_variance = self.line_ids.filtered(lambda l: l.variance_qty != 0)
-        if not lines_with_variance:
-            return
-
-        journal = self.env['account.journal'].search([
-            ('type', '=', 'general'),
-            ('company_id', '=', self.company_id.id)
-        ], limit=1)
-
-        if not journal:
-            raise UserError(_('No general journal found for posting adjustments.'))
-
-        move_lines = []
-
-        for line in lines_with_variance:
-            categ = line.product_id.categ_id
-
-            if line.variance_value > 0:
-                # Gain (counted > on hand): Debit Stock Interim Received (110200), Credit Gain Account
-                interim_received = categ.property_stock_account_input_categ_id
-                if not interim_received:
-                    raise UserError(_('Please configure Stock Interim (Received) account on product category "%s".') % categ.name)
-
-                move_lines.append((0, 0, {
-                    'name': f"Stocktake gain: {line.product_id.name}",
-                    'account_id': interim_received.id,
-                    'debit': abs(line.variance_value),
-                    'credit': 0,
-                }))
-                move_lines.append((0, 0, {
-                    'name': f"Stocktake gain: {line.product_id.name}",
-                    'account_id': self.gain_account_id.id,
-                    'debit': 0,
-                    'credit': abs(line.variance_value),
-                }))
-            else:
-                # Loss (counted < on hand): Debit Loss Account, Credit Stock Interim Delivered (110300)
-                interim_delivered = categ.property_stock_account_output_categ_id
-                if not interim_delivered:
-                    raise UserError(_('Please configure Stock Interim (Delivered) account on product category "%s".') % categ.name)
-
-                move_lines.append((0, 0, {
-                    'name': f"Stocktake loss: {line.product_id.name}",
-                    'account_id': self.loss_account_id.id,
-                    'debit': abs(line.variance_value),
-                    'credit': 0,
-                }))
-                move_lines.append((0, 0, {
-                    'name': f"Stocktake loss: {line.product_id.name}",
-                    'account_id': interim_delivered.id,
-                    'debit': 0,
-                    'credit': abs(line.variance_value),
-                }))
-
-        if move_lines:
-            account_move = self.env['account.move'].create({
-                'journal_id': journal.id,
-                'date': self.date,
-                'ref': f"Stocktake: {self.name}",
-                'line_ids': move_lines,
+            if not quant:
+                quant = StockQuant.create({'product_id': line.product_id.id, 'location_id': stock_location.id})
+            quant.write({
+                'inventory_quantity': quant.quantity + line.variance_qty,
+                'accounting_date': self.date,
             })
-            account_move.action_post()
-            self.account_move_id = account_move
+            quants |= quant
+
+        last_move = self.env['stock.move'].search([], order='id desc', limit=1).id or 0
+        reference = _('Stocktake %s', self.name)
+        quants.with_context(inventory_name=reference)._apply_inventory()
+        self.stock_move_ids = self.env['stock.move'].search([
+            ('id', '>', last_move),
+            ('product_id', 'in', lines.product_id.ids),
+            ('is_inventory', '=', True),
+        ])
+
+    def _get_plausibility_issues(self):
+        """Lines whose value or unit cost look wrong (e.g. a unit-of-measure mistake)."""
+        ICP = self.env['ir.config_parameter'].sudo()
+        max_value = float(ICP.get_param('pos_recipe_costing.stocktake_max_line_value') or 1000000.0)
+        ratio = float(ICP.get_param('pos_recipe_costing.stocktake_cost_ratio') or 3.0)
+        currency = self.currency_id
+        issues = []
+        for line in self.line_ids.filtered(lambda l: l.is_counted and l.count_status != 'skipped'):
+            name = line.product_id.display_name
+            if line.counted_qty > 0 and line.unit_cost <= 0:
+                issues.append(_('%s: no unit cost, so the count has no value.', name))
+            biggest = max(abs(line.counted_value), abs(line.variance_value))
+            if max_value and biggest > max_value:
+                issues.append(_('%(name)s: value %(value)s is above %(max)s.',
+                                name=name, value=currency.format(biggest), max=currency.format(max_value)))
+            last_price = line._last_purchase_unit_price()
+            if ratio > 1 and last_price and line.unit_cost > 0 and \
+                    (line.unit_cost > last_price * ratio or line.unit_cost < last_price / ratio):
+                issues.append(_('%(name)s: unit cost %(cost)s per %(uom)s, last purchase %(last)s.',
+                                name=name, cost=currency.format(line.unit_cost), uom=line.uom_id.name,
+                                last=currency.format(last_price)))
+        return issues
 
     def action_cancel(self):
         self.ensure_one()
@@ -313,6 +318,20 @@ class IngredientStocktakeLine(models.Model):
 
     notes = fields.Char(string='Notes')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            # a line created with a count is counted (the web client may send 0 as a default)
+            if vals.get('counted_qty') and 'is_counted' not in vals:
+                vals['is_counted'] = True
+        return super().create(vals_list)
+
+    def write(self, vals):
+        # entering a count marks the line counted, whatever view or API wrote it
+        if 'counted_qty' in vals and 'is_counted' not in vals:
+            vals = dict(vals, is_counted=True)
+        return super().write(vals)
+
     @api.depends('product_id')
     def _compute_system_qty(self):
         for line in self:
@@ -351,6 +370,22 @@ class IngredientStocktakeLine(models.Model):
         """Mark as counted when user enters a value."""
         self.is_counted = True
 
+    def _last_purchase_unit_price(self):
+        """Price of the last confirmed purchase, per the product's unit and in company currency."""
+        self.ensure_one()
+        if 'purchase.order.line' not in self.env:
+            return 0.0
+        po_line = self.env['purchase.order.line'].sudo().search([
+            ('product_id', '=', self.product_id.id),
+            ('order_id.state', 'in', ('purchase', 'done')),
+            ('price_unit', '>', 0),
+        ], order='date_order desc, id desc', limit=1)
+        if not po_line:
+            return 0.0
+        price = po_line.product_uom._compute_price(po_line.price_unit, self.product_id.uom_id)
+        company = self.stocktake_id.company_id
+        return po_line.currency_id._convert(price, company.currency_id, company, po_line.date_order or fields.Date.today())
+
     def action_match_system(self):
         """Quick action: copy system qty to counted qty and mark as counted."""
         for line in self:
@@ -371,6 +406,18 @@ class IngredientStocktakeLine(models.Model):
             line.counted_qty = 0
             line.is_counted = False
         return True
+
+
+class StocktakeCheckWizard(models.TransientModel):
+    _name = 'ingredient.stocktake.check.wizard'
+    _description = 'Stocktake Validation Check'
+
+    stocktake_id = fields.Many2one('ingredient.stocktake', string='Stocktake', required=True)
+    message = fields.Text(string='Check', readonly=True)
+
+    def action_validate_anyway(self):
+        self.ensure_one()
+        return self.stocktake_id.with_context(stocktake_skip_checks=True).action_validate()
 
 
 class StocktakeCategoryWizard(models.TransientModel):

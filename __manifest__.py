@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Recipe & Food Costing',
-    'version': '18.0.4.5.0',
+    'version': '18.0.4.6.1',
     'category': 'Point of Sale',
     'summary': 'Restaurant recipe management with BOM/kit integration, stocktaking, and COGS tracking',
     'description': """
@@ -41,6 +41,7 @@ Recipe & Food Costing for Restaurants
         'views/res_config_settings_views.xml',
         'views/menu_views.xml',
         'data/dashboard_data.xml',
+        'data/stock_location_accounts.xml',
     ],
     'demo': [
         'data/demo_data.xml',

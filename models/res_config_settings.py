@@ -76,6 +76,20 @@ class ResConfigSettings(models.TransientModel):
         help="Account for inventory losses (when counted < system)"
     )
 
+    # Stocktake checks before validation
+    stocktake_max_line_value = fields.Float(
+        string='Max Value per Ingredient',
+        config_parameter='pos_recipe_costing.stocktake_max_line_value',
+        default=1000000.0,
+        help="Warn on validation when one ingredient's counted value or difference is above this amount"
+    )
+    stocktake_cost_ratio = fields.Float(
+        string='Cost vs Last Purchase (x)',
+        config_parameter='pos_recipe_costing.stocktake_cost_ratio',
+        default=3.0,
+        help="Warn on validation when an ingredient's unit cost is this many times above or below its last purchase price"
+    )
+
     # Waste Tracking Settings
     waste_account_id = fields.Many2one(
         'account.account',
@@ -84,3 +98,8 @@ class ResConfigSettings(models.TransientModel):
         domain="[('account_type', 'in', ['expense', 'expense_direct_cost'])]",
         help="Account for recording ingredient waste expenses (expired, spoiled, damaged)"
     )
+
+    def set_values(self):
+        super().set_values()
+        # Odoo posts count differences and waste on these locations' accounts
+        self.env['stock.location']._recipe_sync_adjustment_accounts()

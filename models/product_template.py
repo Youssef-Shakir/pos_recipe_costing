@@ -78,12 +78,15 @@ class ProductTemplate(models.Model):
         Buy & Sell items need inventory tracking (storable product).
         Kitchen made items use BOM/Kit consumption (consumable).
         """
+        # Odoo 18: storable = type 'consu' + is_storable (detailed_type no longer exists)
         if self.production_type == 'buy_sell':
             # Buy & Sell needs inventory tracking
-            self.detailed_type = 'product'  # Storable product
+            self.type = 'consu'
+            self.is_storable = True
         elif self.production_type in ('kitchen', 'component'):
             # Kitchen made uses BOM consumption
-            self.detailed_type = 'consu'  # Consumable
+            self.type = 'consu'
+            self.is_storable = False
 
     # Ingredient categorization
     is_ingredient = fields.Boolean(

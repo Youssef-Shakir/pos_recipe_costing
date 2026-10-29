@@ -76,14 +76,13 @@ class QuickProduct(models.TransientModel):
         # Determine product type based on production type
         # Buy & Sell products need inventory tracking (storable)
         # Kitchen made items use BOM consumption (consumable)
-        if self.production_type == 'buy_sell':
-            detailed_type = 'product'  # Storable - track inventory
-        else:
-            detailed_type = 'consu'  # Consumable - BOM handles stock
+        # Odoo 18: storable = type 'consu' + is_storable (detailed_type no longer exists)
+        is_storable = self.production_type == 'buy_sell'
 
         product_vals = {
             'name': self.name,
-            'detailed_type': detailed_type,
+            'type': 'consu',
+            'is_storable': is_storable,
             'available_in_pos': True,
             'categ_id': self.category_id.id if self.category_id else self.env.ref('product.product_category_all').id,
             'list_price': self.selling_price,
