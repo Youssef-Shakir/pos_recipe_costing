@@ -88,6 +88,39 @@ class IngredientStocktake(models.Model):
         for stocktake in self:
             stocktake.valuation_move_count = len(stocktake.stock_move_ids.account_move_ids)
 
+    def _report_data(self):
+        """Figures for the stocktake report (report/stocktake_report.xml)."""
+        self.ensure_one()
+        counted = self.line_ids.filtered(lambda l: l.is_counted and l.count_status != 'skipped')
+        differences = counted.filtered(lambda l: l.variance_qty).sorted(lambda l: -abs(l.variance_value))
+        entries = self.account_move_id | self.stock_move_ids.account_move_ids
+        accounts = {}
+        for aml in entries.line_ids:
+            row = accounts.setdefault(aml.account_id, {'account': aml.account_id, 'debit': 0.0, 'credit': 0.0})
+            row['debit'] += aml.debit
+            row['credit'] += aml.credit
+        # what Odoo actually posted per ingredient (line values use today's unit cost)
+        posted = {}
+        for move in self.stock_move_ids:
+            posted[move.product_id.id] = posted.get(move.product_id.id, 0.0) + sum(
+                move.stock_valuation_layer_ids.mapped('value'))
+        return {
+            'posted': posted,
+            'counted': counted,
+            'pending': self.line_ids.filtered(lambda l: not l.is_counted),
+            'skipped': self.line_ids.filtered(lambda l: l.count_status == 'skipped'),
+            'gains': differences.filtered(lambda l: l.variance_qty > 0),
+            'losses': differences.filtered(lambda l: l.variance_qty < 0),
+            'differences': differences,
+            'gain_value': sum(differences.filtered(lambda l: l.variance_value > 0).mapped('variance_value')),
+            'loss_value': sum(differences.filtered(lambda l: l.variance_value < 0).mapped('variance_value')),
+            'counted_value': sum(counted.mapped('counted_value')),
+            'system_value': sum(counted.mapped('system_value')),
+            'entries': entries.sorted('date'),
+            'accounts': sorted(accounts.values(), key=lambda r: r['account'].code or ''),
+            'issues': self._get_plausibility_issues() if self.state != 'done' else [],
+        }
+
     def action_view_valuation_entries(self):
         self.ensure_one()
         return {
@@ -122,6 +155,7 @@ class IngredientStocktake(models.Model):
 
         ingredients = self.env['product.product'].search([
             ('is_ingredient', '=', True),
+            ('is_storable', '=', True),  # only tracked products have stock to count
         ])
 
         existing_products = self.line_ids.mapped('product_id')
@@ -198,7 +232,8 @@ class IngredientStocktake(models.Model):
     def _lines_to_apply(self):
         # Only counted lines move stock: a pending or skipped line has no count, not a count of 0
         return self.line_ids.filtered(
-            lambda l: l.is_counted and l.count_status != 'skipped' and l.variance_qty != 0)
+            lambda l: l.is_counted and l.count_status != 'skipped' and l.variance_qty != 0
+            and l.product_id.is_storable)
 
     def _check_adjustment_accounts(self, lines):
         """Odoo posts the differences on the Inventory adjustment location's accounts.
@@ -294,7 +329,7 @@ class IngredientStocktakeLine(models.Model):
     stocktake_id = fields.Many2one('ingredient.stocktake', string='Stocktake', required=True, ondelete='cascade')
     sequence = fields.Integer(string='Sequence', default=10)
     product_id = fields.Many2one('product.product', string='Ingredient', required=True,
-                                  domain=[('is_ingredient', '=', True)])
+                                  domain=[('is_ingredient', '=', True), ('is_storable', '=', True)])
     product_categ_id = fields.Many2one(related='product_id.categ_id', string='Category', store=True)
     uom_id = fields.Many2one(related='product_id.uom_id', string='UoM')
 
@@ -440,6 +475,7 @@ class StocktakeCategoryWizard(models.TransientModel):
 
         ingredients = self.env['product.product'].search([
             ('is_ingredient', '=', True),
+            ('is_storable', '=', True),  # only tracked products have stock to count
             ('categ_id', 'child_of', self.category_ids.ids),
         ])
 

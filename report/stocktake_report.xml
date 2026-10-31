@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Report Action: Print › Stocktake Report on a stocktake -->
+    <record id="action_report_stocktake" model="ir.actions.report">
+        <field name="name">Stocktake Report / تقرير الجرد</field>
+        <field name="model">ingredient.stocktake</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pos_recipe_costing.report_stocktake</field>
+        <field name="report_file">pos_recipe_costing.report_stocktake</field>
+        <field name="print_report_name">'Stocktake_%s' % (object.name or '').replace('/', '-')</field>
+        <field name="binding_model_id" ref="model_ingredient_stocktake"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_stocktake">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="d" t-value="o._report_data()"/>
+                    <t t-set="cur" t-value="o.currency_id"/>
+                    <t t-set="money" t-value="{'widget': 'monetary', 'display_currency': cur}"/>
+                    <t t-set="done" t-value="o.state == 'done'"/>
+                    <div class="page" style="font-size: 9pt;">
+
+                        <h3 class="mb-1">Stocktake Report / تقرير الجرد · <t t-esc="o.name"/></h3>
+                        <table class="table table-sm table-borderless mb-2" style="width: auto;">
+                            <tr><td class="text-muted pe-4">Count date / تاريخ الجرد</td><td><span t-field="o.date"/></td>
+                                <td class="text-muted ps-5 pe-4">Status / الحالة</td><td><span t-field="o.state"/></td></tr>
+                            <tr><td class="text-muted pe-4">Responsible / المسؤول</td><td><span t-field="o.user_id"/></td>
+                                <td class="text-muted ps-5 pe-4">Printed / تاريخ الطباعة</td>
+                                <td><t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/></td></tr>
+                        </table>
+
+                        <!-- Summary -->
+                        <table class="table table-sm table-bordered mb-3">
+                            <thead><tr class="table-light">
+                                <th>Ingredients / المواد</th><th class="text-end">Counted / معدودة</th>
+                                <th class="text-end">Not counted / غير معدودة</th><th class="text-end">With a difference / بفرق</th>
+                                <th class="text-end">Surplus / زيادة</th><th class="text-end">Shortage / نقص</th>
+                                <th class="text-end">Net / الصافي</th>
+                            </tr></thead>
+                            <tr>
+                                <td><t t-esc="len(o.line_ids)"/></td>
+                                <td class="text-end"><t t-esc="len(d['counted'])"/></td>
+                                <td class="text-end"><t t-esc="len(d['pending']) + len(d['skipped'])"/></td>
+                                <td class="text-end"><t t-esc="len(d['differences'])"/>
+                                    (<t t-esc="len(d['gains'])"/> + / <t t-esc="len(d['losses'])"/> −)</td>
+                                <td class="text-end text-success"><span t-esc="d['gain_value']" t-options="money"/></td>
+                                <td class="text-end text-danger"><span t-esc="d['loss_value']" t-options="money"/></td>
+                                <td class="text-end fw-bold"><span t-esc="d['gain_value'] + d['loss_value']" t-options="money"/></td>
+                            </tr>
+                        </table>
+                        <p class="text-muted mb-3" style="font-size: 8pt;">
+                            Counted stock value / قيمة المعدود: <span t-esc="d['counted_value']" t-options="money"/>
+                            · system value of the same ingredients / قيمة النظام: <span t-esc="d['system_value']" t-options="money"/>.
+                            <t t-if="done and d['posted']"> Line values use today's unit cost; the "Posted" column is what Odoo posted on the count date.</t>
+                            <t t-if="done and not d['posted'] and d['entries']"> Line values use today's unit cost; what was posted is under Accounting.</t>
+                            <t t-if="not done"> Not validated yet: values use today's unit cost.</t>
+                        </p>
+
+                        <!-- Checks before validation -->
+                        <t t-if="d['issues']">
+                            <div class="alert alert-warning p-2 mb-3" style="font-size: 8.5pt;">
+                                <strong>To check before validating / للتحقق قبل الاعتماد</strong>
+                                <ul class="mb-0"><t t-foreach="d['issues']" t-as="issue"><li t-esc="issue"/></t></ul>
+                            </div>
+                        </t>
+
+                        <!-- Differences -->
+                        <h5>Differences / الفروقات</h5>
+                        <t t-if="not d['differences']"><p class="text-muted">No differences: every counted ingredient matches the system.</p></t>
+                        <table t-if="d['differences']" class="table table-sm table-striped mb-3">
+                            <thead><tr class="table-light">
+                                <th>Ingredient / المادة</th><th>Category / الفئة</th>
+                                <th class="text-end">System / النظام</th><th class="text-end">Counted / المعدود</th>
+                                <th class="text-end">Difference / الفرق</th><th>Unit / الوحدة</th>
+                                <th class="text-end">Unit cost / الكلفة</th><th class="text-end">Value / القيمة</th>
+                                <th t-if="done and d['posted']" class="text-end">Posted / المرحّل</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr t-foreach="d['differences']" t-as="l" style="page-break-inside: avoid;">
+                                    <td><t t-esc="l.product_id.display_name"/><t t-if="l.notes"><br/><small class="text-muted" t-esc="l.notes"/></t></td>
+                                    <td><t t-esc="l.product_categ_id.name"/></td>
+                                    <td class="text-end"><t t-esc="'%g' % round(l.system_qty, 3)"/></td>
+                                    <td class="text-end"><t t-esc="'%g' % round(l.counted_qty, 3)"/></td>
+                                    <td t-attf-class="text-end fw-bold #{'text-success' if l.variance_qty &gt; 0 else 'text-danger'}">
+                                        <t t-esc="'%+g' % round(l.variance_qty, 3)"/></td>
+                                    <td><t t-esc="l.uom_id.name"/></td>
+                                    <td class="text-end"><span t-esc="l.unit_cost" t-options="money"/></td>
+                                    <td t-attf-class="text-end #{'text-success' if l.variance_value &gt; 0 else 'text-danger'}">
+                                        <span t-esc="l.variance_value" t-options="money"/></td>
+                                    <td t-if="done and d['posted']" class="text-end">
+                                        <t t-if="l.product_id.id in d['posted']"><span t-esc="d['posted'][l.product_id.id]" t-options="money"/></t>
+                                        <t t-else="">–</t></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Accounting -->
+                        <t t-if="d['entries']">
+                            <h5>Accounting / القيود</h5>
+                            <table class="table table-sm mb-1" style="width: auto; min-width: 60%;">
+                                <thead><tr class="table-light"><th>Account / الحساب</th><th class="text-end">Debit / مدين</th><th class="text-end">Credit / دائن</th></tr></thead>
+                                <tr t-foreach="d['accounts']" t-as="r">
+                                    <td><t t-esc="r['account'].display_name"/></td>
+                                    <td class="text-end"><span t-esc="r['debit']" t-options="money"/></td>
+                                    <td class="text-end"><span t-esc="r['credit']" t-options="money"/></td>
+                                </tr>
+                            </table>
+                            <p class="text-muted" style="font-size: 8pt;">
+                                <t t-esc="len(d['entries'])"/> entries, dated
+                                <t t-esc="', '.join(sorted(set(str(e.date) for e in d['entries'])))"/>.
+                                <t t-if="o.account_move_id"> This stocktake was validated before 18.0.4.6.0, so it posted its own entry (<t t-esc="o.account_move_id.name"/>).</t>
+                            </p>
+                        </t>
+
+                        <!-- Not counted -->
+                        <t t-if="d['pending'] or d['skipped']">
+                            <h5>Not counted / لم تُعدّ</h5>
+                            <p style="font-size: 8pt;">
+                                <t t-esc="' · '.join((d['pending'] | d['skipped']).mapped('product_id.display_name'))"/>
+                            </p>
+                            <p class="text-muted" style="font-size: 8pt;">These ingredients keep their system quantity; nothing is posted for them.</p>
+                        </t>
+
+                        <t t-if="o.notes"><h5>Notes / ملاحظات</h5><p t-field="o.notes"/></t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

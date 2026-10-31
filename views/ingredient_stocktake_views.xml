@@ -32,6 +32,9 @@
                             class="btn-success" icon="fa-check"
                             invisible="state != 'in_progress'"
                             confirm="This applies the counted differences to stock, dated on the stocktake date, and Odoo posts them to the gain / loss accounts. Continue?"/>
+                    <button name="%(pos_recipe_costing.action_report_stocktake)d" type="action"
+                            string="Print Report" icon="fa-print"
+                            invisible="state == 'draft'"/>
                     <button name="action_cancel" type="object"
                             string="Cancel" icon="fa-times"
                             invisible="state in ('done', 'cancelled')"/>
