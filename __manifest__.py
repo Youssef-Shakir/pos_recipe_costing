@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Recipe & Food Costing',
-    'version': '18.0.4.7.1',
+    'version': '18.0.4.7.2',
     'category': 'Point of Sale',
     'summary': 'Restaurant recipe management with BOM/kit integration, stocktaking, and COGS tracking',
     'description': """

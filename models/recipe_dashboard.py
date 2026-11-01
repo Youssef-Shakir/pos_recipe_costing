@@ -89,7 +89,9 @@ class RecipeDashboard(models.Model):
             ('is_ingredient', '=', False)
         ])
         products_with_recipe = recipes.mapped('product_id')
-        variants_without = pos_menu_items - products_with_recipe
+        # Buy & Sell items are resold as-is and never need a recipe
+        variants_without = pos_menu_items.filtered(
+            lambda p: p.production_type != 'buy_sell') - products_with_recipe
 
         # Count by production type
         kitchen_made = ProductTemplate.search_count([
@@ -203,6 +205,7 @@ class RecipeDashboard(models.Model):
             'domain': [
                 ('available_in_pos', '=', True),
                 ('is_ingredient', '=', False),
+                ('production_type', '!=', 'buy_sell'),
                 ('id', 'not in', products_with_recipe.ids)
             ],
             'target': 'current',
@@ -325,6 +328,7 @@ class RecipeDashboard(models.Model):
             'domain': [
                 ('available_in_pos', '=', True),
                 ('is_ingredient', '=', False),
+                ('production_type', '!=', 'buy_sell'),
                 ('id', 'not in', products_with_recipe_ids),
             ],
             'target': 'current',
