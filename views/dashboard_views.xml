@@ -377,6 +377,64 @@
                             </div>
                         </div>
 
+                        <!-- Reorder Section -->
+                        <div class="consumption-card">
+                            <h2 class="consumption-title">
+                                <i class="fa fa-shopping-basket text-danger"/>
+                                Reorder / إعادة الطلب
+                            </h2>
+                            <div class="row align-items-center">
+                                <div class="col-md-2 col-6">
+                                    <button name="action_view_order_now" type="object" class="border-0 bg-transparent p-0 text-start w-100">
+                                        <div class="consumption-stat">
+                                            <div class="consumption-label text-danger">Order Now</div>
+                                            <div class="consumption-value text-danger">
+                                                <field name="order_now_count" readonly="1"/>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <div class="consumption-stat">
+                                        <div class="consumption-label text-warning">No Vendor</div>
+                                        <div class="consumption-value text-warning">
+                                            <field name="order_now_no_vendor_count" readonly="1"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <div class="consumption-stat">
+                                        <div class="consumption-label text-warning">Negative Stock</div>
+                                        <div class="consumption-value text-warning">
+                                            <field name="order_now_negative_count" readonly="1"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-6">
+                                    <button name="action_view_reorder_points" type="object" class="border-0 bg-transparent p-0 text-start w-100">
+                                        <div class="consumption-stat">
+                                            <div class="consumption-label">Tracked / Manual</div>
+                                            <div class="consumption-value">
+                                                <field name="reorder_tracked_count" readonly="1" class="d-inline"/> /
+                                                <field name="reorder_manual_count" readonly="1" class="d-inline"/>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button name="action_print_order_now" type="object" class="btn-primary-action" style="width: auto; display: inline-block; padding: 12px 28px;">
+                                        <i class="fa fa-print me-2"/> Order Now Report
+                                    </button>
+                                    <div class="text-muted small mt-2">
+                                        Recalculated: <field name="reorder_last_computed" readonly="1" class="d-inline"/>
+                                        <button name="action_recompute_reorder" type="object" class="btn btn-link btn-sm p-0 ms-2">
+                                            <i class="fa fa-refresh"/> Recalculate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Consumption Section -->
                         <div class="consumption-card">
                             <h2 class="consumption-title">
@@ -485,6 +543,12 @@
                                         </button>
                                         <button name="action_view_stocktakes" type="object" class="btn-link-action">
                                             <i class="fa fa-list-alt"/> View Stocktakes
+                                        </button>
+                                        <button name="action_view_order_now" type="object" class="btn-link-action text-danger">
+                                            <i class="fa fa-shopping-basket"/> Order Now
+                                        </button>
+                                        <button name="action_view_reorder_points" type="object" class="btn-link-action">
+                                            <i class="fa fa-sliders"/> Reorder Points
                                         </button>
                                         <div class="link-separator"/>
                                         <button name="action_new_waste" type="object" class="btn-secondary-action" style="background: #ffebee; color: #c62828;">

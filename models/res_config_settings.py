@@ -99,7 +99,28 @@ class ResConfigSettings(models.TransientModel):
         help="Account for recording ingredient waste expenses (expired, spoiled, damaged)"
     )
 
+    # Reorder points (Order Now)
+    reorder_history_days = fields.Integer(
+        string='Consumption History (days)',
+        config_parameter='pos_recipe_costing.reorder_history_days',
+        default=30,
+        help="Average daily use is taken over this many past days"
+    )
+    reorder_cover_days = fields.Float(
+        string='Reorder at (days of cover)',
+        config_parameter='pos_recipe_costing.reorder_cover_days',
+        default=3.0,
+        help="Default for ingredients: order when stock covers fewer days than this"
+    )
+    reorder_fill_days = fields.Float(
+        string='Fill up to (days)',
+        config_parameter='pos_recipe_costing.reorder_fill_days',
+        default=7.0,
+        help="Default for ingredients: an order brings stock up to this many days of use"
+    )
+
     def set_values(self):
         super().set_values()
+        self.env['product.product'].browse()._recipe_compute_reorder()
         # Odoo posts count differences and waste on these locations' accounts
         self.env['stock.location']._recipe_sync_adjustment_accounts()

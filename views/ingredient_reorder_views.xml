@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Reorder tab on the ingredient (variant) form -->
+    <record id="view_product_product_form_reorder" model="ir.ui.view">
+        <field name="name">product.product.form.recipe.reorder</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Reorder / إعادة الطلب" name="recipe_reorder" invisible="not is_ingredient or not is_storable">
+                    <group>
+                        <group string="Levels / المستويات">
+                            <field name="reorder_mode" widget="radio" options="{'horizontal': true}"/>
+                            <field name="reorder_point"/>
+                            <field name="reorder_max_qty"/>
+                            <field name="reorder_cover_days"/>
+                            <field name="reorder_fill_days"/>
+                        </group>
+                        <group string="From consumption / من الاستهلاك">
+                            <field name="reorder_avg_daily"/>
+                            <field name="reorder_auto_point"/>
+                            <field name="reorder_auto_max"/>
+                            <field name="reorder_computed_on"/>
+                            <field name="reorder_needed"/>
+                            <field name="reorder_order_qty" invisible="not reorder_needed"/>
+                        </group>
+                    </group>
+                    <div>
+                        <button name="action_reorder_recompute" type="object" string="Recalculate" class="btn-secondary"/>
+                        <button name="action_reorder_set_auto" type="object" string="Back to Auto"
+                                class="btn-secondary ms-2" invisible="reorder_mode == 'auto'"/>
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Reorder Points: all ingredients, editable -->
+    <record id="view_ingredient_reorder_list" model="ir.ui.view">
+        <field name="name">product.product.reorder.list</field>
+        <field name="model">product.product</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Reorder Points" editable="bottom" create="false" delete="false"
+                  decoration-danger="reorder_needed" decoration-muted="reorder_point == 0">
+                <header>
+                    <button name="action_reorder_recompute" type="object" string="Recalculate Selected"/>
+                    <button name="action_reorder_set_auto" type="object" string="Back to Auto"/>
+                    <button name="action_reorder_recompute_all" type="object" string="Recalculate All"
+                            display="always"/>
+                </header>
+                <field name="display_name" string="Ingredient" readonly="1"/>
+                <field name="categ_id" optional="hide" readonly="1"/>
+                <field name="qty_available" string="On Hand" readonly="1"/>
+                <field name="uom_id" string="Unit" readonly="1" options="{'no_open': True}"/>
+                <field name="reorder_avg_daily"/>
+                <field name="reorder_days_left" optional="show"/>
+                <field name="reorder_mode" widget="badge" readonly="1"
+                       decoration-info="reorder_mode == 'auto'" decoration-warning="reorder_mode == 'manual'"/>
+                <field name="reorder_point"/>
+                <field name="reorder_max_qty"/>
+                <field name="reorder_auto_point" optional="show"/>
+                <field name="reorder_auto_max" optional="hide"/>
+                <field name="reorder_cover_days" optional="hide"/>
+                <field name="reorder_fill_days" optional="hide"/>
+                <field name="reorder_needed" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Order Now: ingredients at or below their reorder point -->
+    <record id="view_ingredient_order_now_list" model="ir.ui.view">
+        <field name="name">product.product.order.now.list</field>
+        <field name="model">product.product</field>
+        <field name="priority">100</field>
+        <field name="arch" type="xml">
+            <list string="Order Now" create="false" delete="false" default_order="name">
+                <header>
+                    <button name="action_print_order_now" type="object" string="Print Order Now"
+                            display="always"/>
+                    <button name="action_reorder_recompute_all" type="object" string="Recalculate All"
+                            display="always"/>
+                </header>
+                <field name="display_name" string="Ingredient"/>
+                <field name="categ_id" optional="hide"/>
+                <field name="reorder_vendor_id"/>
+                <field name="qty_available" string="On Hand"/>
+                <field name="reorder_days_left"/>
+                <field name="reorder_point"/>
+                <field name="reorder_max_qty" optional="hide"/>
+                <field name="reorder_order_qty" class="fw-bold"/>
+                <field name="uom_id" string="Unit" options="{'no_open': True}"/>
+                <field name="reorder_order_qty_po" optional="show"/>
+                <field name="uom_po_id" string="Purchase Unit" optional="show" options="{'no_open': True}"/>
+                <field name="reorder_mode" widget="badge" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_ingredient_order_now" model="ir.actions.act_window">
+        <field name="name">Order Now / اطلب الآن</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_ingredient_order_now_list"/>
+        <field name="domain">[('is_ingredient', '=', True), ('reorder_needed', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing to order</p>
+            <p>Every ingredient is above its reorder point. Reorder points are recalculated every night from
+               the last days of consumption; set them under Reorder Points.</p>
+        </field>
+    </record>
+
+    <record id="action_ingredient_reorder_points" model="ir.actions.act_window">
+        <field name="name">Reorder Points / نقاط إعادة الطلب</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_ingredient_reorder_list"/>
+        <field name="domain">[('is_ingredient', '=', True), ('is_storable', '=', True)]</field>
+    </record>
+
+</odoo>

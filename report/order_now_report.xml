@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Order Now report: ingredients at or below their reorder point, grouped by vendor -->
+    <record id="action_report_order_now" model="ir.actions.report">
+        <field name="name">Order Now / اطلب الآن</field>
+        <field name="model">product.product</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pos_recipe_costing.report_order_now</field>
+        <field name="report_file">pos_recipe_costing.report_order_now</field>
+        <field name="print_report_name">'Order_Now_%s' % time.strftime('%Y-%m-%d')</field>
+    </record>
+
+    <template id="report_order_now">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-set="settings" t-value="data['settings']"/>
+                <div class="page" style="font-size: 9pt;">
+
+                    <h3 class="mb-1">Order Now / اطلب الآن</h3>
+                    <p class="text-muted mb-3" style="font-size: 8pt;">
+                        <t t-esc="data['company']"/> ·
+                        printed <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d %H:%M')"/> ·
+                        <t t-esc="count"/> ingredients at or below their reorder point
+                        <t t-if="negative_count"> · <t t-esc="negative_count"/> with negative stock</t>.
+                        Average daily use over the last <t t-esc="settings['history_days']"/> days (POS sales + waste + stocktake differences);
+                        default reorder at <t t-esc="'%g' % settings['cover_days']"/> days, fill up to <t t-esc="'%g' % settings['fill_days']"/> days.
+                    </p>
+
+                    <t t-if="not count"><p>Nothing to order: every ingredient is above its reorder point.</p></t>
+
+                    <t t-foreach="groups" t-as="group">
+                        <t t-set="vendor" t-value="group[0]"/>
+                        <t t-set="items" t-value="group[1]"/>
+                        <h5 class="mt-3 mb-1"><t t-esc="vendor"/> <small class="text-muted">(<t t-esc="len(items)"/>)</small></h5>
+                        <table class="table table-sm table-striped mb-2">
+                            <thead><tr class="table-light">
+                                <th>Ingredient / المادة</th>
+                                <th class="text-end">On hand / المتوفر</th>
+                                <th class="text-end">Daily use / الاستهلاك اليومي</th>
+                                <th class="text-end">Days left / أيام متبقية</th>
+                                <th class="text-end">Reorder point / نقطة الطلب</th>
+                                <th class="text-end">Order / الطلب</th>
+                                <th class="text-end">In purchase unit / بوحدة الشراء</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr t-foreach="items" t-as="i" style="page-break-inside: avoid;">
+                                    <td><t t-esc="i['name']"/>
+                                        <t t-if="i['mode'] == 'manual'"> <small class="text-muted">(manual)</small></t></td>
+                                    <td t-attf-class="text-end #{'text-danger fw-bold' if i['negative_stock'] else ''}">
+                                        <t t-esc="'%g' % round(i['on_hand'], 2)"/> <t t-esc="i['uom']"/>
+                                        <t t-if="i['negative_stock']"><br/><small>negative: check records</small></t></td>
+                                    <td class="text-end"><t t-esc="'%g' % round(i['avg_daily_use'], 2)"/></td>
+                                    <td class="text-end"><t t-esc="'%g' % i['days_left'] if i['days_left'] is not None else '–'"/></td>
+                                    <td class="text-end"><t t-esc="'%g' % round(i['reorder_point'], 2)"/></td>
+                                    <td class="text-end fw-bold"><t t-esc="'%g' % round(i['order_qty'], 2)"/> <t t-esc="i['uom']"/></td>
+                                    <td class="text-end"><t t-esc="'%g' % round(i['order_qty_purchase_uom'], 2)"/> <t t-esc="i['purchase_uom']"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

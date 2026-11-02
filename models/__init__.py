@@ -12,3 +12,4 @@ from . import recipe_cost_history
 from . import consumption_line
 from . import consumption_report
 from . import product_attribute
+from . import ingredient_reorder

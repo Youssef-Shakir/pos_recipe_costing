@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Recipe & Food Costing',
-    'version': '18.0.4.7.2',
+    'version': '18.0.4.8.1',
     'category': 'Point of Sale',
     'summary': 'Restaurant recipe management with BOM/kit integration, stocktaking, and COGS tracking',
     'description': """
@@ -14,6 +14,7 @@ Recipe & Food Costing for Restaurants
 - Quick add forms for ingredients and menu items
 - POS products list with easy recipe creation
 - Ingredient stocktaking with accounting integration
+- Reorder points from consumption and a daily Order Now list
 - Integration with POS for seamless ordering
     """,
     'author': 'Donialink, Yousif Shakir',
@@ -27,6 +28,7 @@ Recipe & Food Costing for Restaurants
         'report/recipe_variant_report_action.xml',
         'report/consumption_report_template.xml',
         'report/stocktake_report.xml',
+        'report/order_now_report.xml',
         'views/ingredient_stocktake_views.xml',
         'views/ingredient_waste_views.xml',
         'views/consumption_report_views.xml',
@@ -39,10 +41,12 @@ Recipe & Food Costing for Restaurants
         'views/dashboard_views.xml',
         'views/restaurant_recipe_views.xml',
         'views/product_views.xml',
+        'views/ingredient_reorder_views.xml',
         'views/res_config_settings_views.xml',
         'views/menu_views.xml',
         'data/dashboard_data.xml',
         'data/stock_location_accounts.xml',
+        'data/reorder_cron.xml',
     ],
     'demo': [
         'data/demo_data.xml',

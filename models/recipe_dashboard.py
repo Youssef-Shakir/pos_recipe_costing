@@ -37,6 +37,27 @@ class RecipeDashboard(models.Model):
     kitchen_made_count = fields.Integer(compute='_compute_stats', string='Kitchen Made')
     buy_sell_count = fields.Integer(compute='_compute_stats', string='Buy & Sell')
 
+    # Reorder statistics
+    order_now_count = fields.Integer(compute='_compute_reorder_stats', string='Order Now')
+    order_now_no_vendor_count = fields.Integer(compute='_compute_reorder_stats', string='Order Now Without Vendor')
+    order_now_negative_count = fields.Integer(compute='_compute_reorder_stats', string='Order Now With Negative Stock')
+    reorder_manual_count = fields.Integer(compute='_compute_reorder_stats', string='Manual Reorder Points')
+    reorder_tracked_count = fields.Integer(compute='_compute_reorder_stats', string='Ingredients With Reorder Point')
+    reorder_last_computed = fields.Datetime(compute='_compute_reorder_stats', string='Reorder Points Recalculated')
+
+    def _compute_reorder_stats(self):
+        ingredients = self.env['product.product'].search([('is_ingredient', '=', True), ('is_storable', '=', True)])
+        tracked = ingredients.filtered(lambda p: p.reorder_point > 0)
+        needed = tracked.filtered('reorder_needed')
+        dates = [d for d in ingredients.mapped('reorder_computed_on') if d]
+        for rec in self:
+            rec.order_now_count = len(needed)
+            rec.order_now_no_vendor_count = len(needed.filtered(lambda p: not p.reorder_vendor_id))
+            rec.order_now_negative_count = len(needed.filtered(lambda p: p.qty_available < 0))
+            rec.reorder_manual_count = len(ingredients.filtered(lambda p: p.reorder_mode == 'manual'))
+            rec.reorder_tracked_count = len(tracked)
+            rec.reorder_last_computed = max(dates) if dates else False
+
     # Waste statistics
     waste_count = fields.Integer(compute='_compute_stats', string='Waste Records')
     waste_value = fields.Float(compute='_compute_stats', string='Waste Value')
@@ -269,6 +290,18 @@ class RecipeDashboard(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+
+    def action_view_order_now(self):
+        return self.env['ir.actions.act_window']._for_xml_id('pos_recipe_costing.action_ingredient_order_now')
+
+    def action_view_reorder_points(self):
+        return self.env['ir.actions.act_window']._for_xml_id('pos_recipe_costing.action_ingredient_reorder_points')
+
+    def action_print_order_now(self):
+        return self.env['product.product'].action_print_order_now()
+
+    def action_recompute_reorder(self):
+        return self.env['product.product'].action_reorder_recompute_all()
 
     def action_view_stocktakes(self):
         return {

@@ -102,6 +102,18 @@
               parent="menu_recipe_costing_root"
               sequence="40"/>
 
+    <menuitem id="menu_ingredient_order_now"
+              name="Order Now"
+              parent="menu_inventory_section"
+              action="action_ingredient_order_now"
+              sequence="5"/>
+
+    <menuitem id="menu_ingredient_reorder_points"
+              name="Reorder Points"
+              parent="menu_inventory_section"
+              action="action_ingredient_reorder_points"
+              sequence="6"/>
+
     <menuitem id="menu_ingredient_stocktake"
               name="Stocktake"
               parent="menu_inventory_section"

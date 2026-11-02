@@ -59,6 +59,17 @@
                             <field name="stocktake_cost_ratio"/>
                         </setting>
                     </block>
+                    <block title="Reorder Points / نقاط إعادة الطلب" name="reorder_points">
+                        <setting string="Consumption history (days) / فترة الاستهلاك" help="Average daily use = POS sales + waste + stocktake differences over this many days. Recalculated every night.">
+                            <field name="reorder_history_days"/>
+                        </setting>
+                        <setting string="Reorder at (days) / الطلب عند (أيام)" help="Reorder point = average daily use × these days. Each ingredient can override it.">
+                            <field name="reorder_cover_days"/>
+                        </setting>
+                        <setting string="Fill up to (days) / التعبئة حتى (أيام)" help="Order Now suggests ordering up to average daily use × these days. Each ingredient can override it.">
+                            <field name="reorder_fill_days"/>
+                        </setting>
+                    </block>
                     <block title="Waste Tracking / تتبع الهدر" name="waste_tracking">
                         <setting string="Waste Expense Account / حساب مصروفات الهدر" help="Saved on the location Virtual Locations/Scrap, so Odoo posts waste (scrap) here directly.">
                             <field name="waste_account_id"/>

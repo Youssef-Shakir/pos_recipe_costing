@@ -455,6 +455,22 @@ class ProductProduct(models.Model):
             'target': 'current',
         }
 
+    # The variant form reuses the template form and its recipe buttons: pass them on to the template
+    def action_view_used_in_recipes(self):
+        return self.product_tmpl_id.action_view_used_in_recipes()
+
+    def action_open_variant_recipe_setup(self):
+        return self.product_tmpl_id.action_open_variant_recipe_setup()
+
+    def action_open_variant_recipe_editor(self):
+        return self.product_tmpl_id.action_open_variant_recipe_editor()
+
+    def action_print_variant_recipes(self):
+        return self.product_tmpl_id.action_print_variant_recipes()
+
+    def action_print_kitchen_cards(self):
+        return self.product_tmpl_id.action_print_kitchen_cards()
+
     def action_create_recipe_bulk(self):
         """Create recipes for multiple products at once"""
         Recipe = self.env['restaurant.recipe']
