@@ -13,7 +13,14 @@ class IngredientStocktake(models.Model):
                        default=lambda self: _('New'))
     date = fields.Date(string='Date', required=True, default=fields.Date.context_today)
     user_id = fields.Many2one('res.users', string='Responsible', default=lambda self: self.env.user)
-    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company)
+    warehouse_id = fields.Many2one(
+        'stock.warehouse', string='Warehouse', check_company=True,
+        default=lambda self: self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1),
+        domain="[('company_id', '=', company_id)]",
+        help="The stock that is counted: system quantities are read from this warehouse "
+             "and the differences are applied to it.")
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -43,19 +50,33 @@ class IngredientStocktake(models.Model):
 
     @api.model
     def _default_gain_account(self):
-        ICP = self.env['ir.config_parameter'].sudo()
-        account_id = ICP.get_param('pos_recipe_costing.stocktake_gain_account_id')
-        if account_id:
-            return int(account_id)
-        return False
+        return self.env.company.recipe_stocktake_gain_account_id
 
     @api.model
     def _default_loss_account(self):
-        ICP = self.env['ir.config_parameter'].sudo()
-        account_id = ICP.get_param('pos_recipe_costing.stocktake_loss_account_id')
-        if account_id:
-            return int(account_id)
-        return False
+        return self.env.company.recipe_stocktake_loss_account_id
+
+    @api.onchange('company_id')
+    def _onchange_company_id(self):
+        company = self.company_id
+        self.warehouse_id = self.env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1)
+        self.gain_account_id = company.recipe_stocktake_gain_account_id
+        self.loss_account_id = company.recipe_stocktake_loss_account_id
+
+    def _get_warehouse(self):
+        self.ensure_one()
+        warehouse = self.warehouse_id or self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company_id.id)], limit=1)
+        if not warehouse.lot_stock_id:
+            raise UserError(_('No warehouse stock location found for %s.', self.company_id.name))
+        return warehouse
+
+    def _ingredient_domain(self):
+        """Ingredients this stocktake can count: tracked ones, shared or of its company."""
+        self.ensure_one()
+        return [('is_ingredient', '=', True),
+                ('is_storable', '=', True),  # only tracked products have stock to count
+                ('company_id', 'in', [False, self.company_id.id])]
 
     notes = fields.Text(string='Notes')
 
@@ -143,8 +164,8 @@ class IngredientStocktake(models.Model):
         if not self.line_ids:
             raise UserError(_('Please add ingredients to count before starting.'))
         # The snapshot the count is compared with is taken now, not when the lines were loaded
-        for line in self.line_ids:
-            line.system_qty = line.product_id.qty_available
+        self.warehouse_id = self._get_warehouse()
+        self.line_ids._refresh_system_qty()
         self.state = 'in_progress'
 
     def action_load_all_ingredients(self):
@@ -153,10 +174,7 @@ class IngredientStocktake(models.Model):
         if self.state != 'draft':
             raise UserError(_('Can only load ingredients in draft state.'))
 
-        ingredients = self.env['product.product'].search([
-            ('is_ingredient', '=', True),
-            ('is_storable', '=', True),  # only tracked products have stock to count
-        ])
+        ingredients = self.env['product.product'].search(self._ingredient_domain())
 
         existing_products = self.line_ids.mapped('product_id')
         new_lines = []
@@ -203,6 +221,8 @@ class IngredientStocktake(models.Model):
 
     def action_validate(self):
         self.ensure_one()
+        # Stock, costs and accounts are those of the stocktake's company, whatever company the user is in
+        self = self.with_company(self.company_id)
         if self.state != 'in_progress':
             raise UserError(_('Stocktake must be in progress to validate.'))
 
@@ -239,7 +259,7 @@ class IngredientStocktake(models.Model):
         """Odoo posts the differences on the Inventory adjustment location's accounts.
         Without them it would fall back to Stock Incoming / Outgoing, the purchase and POS
         clearing accounts, which is what this module must not touch."""
-        self.env['stock.location']._recipe_sync_adjustment_accounts()
+        self.env['stock.location']._recipe_sync_adjustment_accounts(self.company_id)
         for location in lines.product_id.with_company(self.company_id).mapped('property_stock_inventory'):
             if lines.filtered(lambda l: l.variance_qty > 0) and not location.valuation_out_account_id:
                 raise UserError(_('Set the Inventory Gain Account in Settings › Recipe Costing › Stocktake Accounts. '
@@ -253,12 +273,9 @@ class IngredientStocktake(models.Model):
 
         The difference (counted - snapshot at the start of the count) is added to the
         stock of now, so sales and receipts since the count are kept."""
-        warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.company_id.id)], limit=1)
-        if not warehouse.lot_stock_id:
-            raise UserError(_('No warehouse stock location found for %s.', self.company_id.name))
-        stock_location = warehouse.lot_stock_id
+        stock_location = self._get_warehouse().lot_stock_id
 
-        StockQuant = self.env['stock.quant'].with_context(inventory_mode=True)
+        StockQuant = self.env['stock.quant'].with_company(self.company_id).with_context(inventory_mode=True)
         quants = StockQuant.browse()
         for line in lines:
             quant = StockQuant.search([
@@ -328,8 +345,10 @@ class IngredientStocktakeLine(models.Model):
 
     stocktake_id = fields.Many2one('ingredient.stocktake', string='Stocktake', required=True, ondelete='cascade')
     sequence = fields.Integer(string='Sequence', default=10)
-    product_id = fields.Many2one('product.product', string='Ingredient', required=True,
-                                  domain=[('is_ingredient', '=', True), ('is_storable', '=', True)])
+    company_id = fields.Many2one(related='stocktake_id.company_id', store=True, index=True)
+    product_id = fields.Many2one('product.product', string='Ingredient', required=True, check_company=True,
+                                  domain="[('is_ingredient', '=', True), ('is_storable', '=', True), "
+                                         "('company_id', 'in', [False, company_id])]")
     product_categ_id = fields.Many2one(related='product_id.categ_id', string='Category', store=True)
     uom_id = fields.Many2one(related='product_id.uom_id', string='UoM')
 
@@ -344,7 +363,8 @@ class IngredientStocktakeLine(models.Model):
     ], string='Status', default='pending', compute='_compute_count_status', store=True)
     variance_qty = fields.Float(string='Variance', compute='_compute_variance', store=True)
 
-    unit_cost = fields.Float(related='product_id.standard_price', string='Unit Cost')
+    unit_cost = fields.Float(compute='_compute_unit_cost', string='Unit Cost',
+                             help="The ingredient's cost in the stocktake's company")
     currency_id = fields.Many2one(related='stocktake_id.currency_id')
 
     system_value = fields.Monetary(compute='_compute_values', string='System Value', store=True)
@@ -369,11 +389,27 @@ class IngredientStocktakeLine(models.Model):
 
     @api.depends('product_id')
     def _compute_system_qty(self):
+        self._refresh_system_qty()
+
+    def _refresh_system_qty(self):
+        """Stock on hand in the stocktake's warehouse (its stock location and sublocations),
+        never the sum of every company the user has selected."""
         for line in self:
-            if line.product_id:
-                line.system_qty = line.product_id.qty_available
-            else:
+            stocktake = line.stocktake_id
+            if not line.product_id or not stocktake:
                 line.system_qty = 0
+                continue
+            warehouse = stocktake.warehouse_id or self.env['stock.warehouse'].search(
+                [('company_id', '=', stocktake.company_id.id)], limit=1)
+            product = line.product_id.with_company(stocktake.company_id).with_context(
+                allowed_company_ids=stocktake.company_id.ids, location=warehouse.lot_stock_id.id)
+            line.system_qty = product.qty_available
+
+    @api.depends('product_id', 'product_id.standard_price', 'stocktake_id.company_id')
+    def _compute_unit_cost(self):
+        for line in self:
+            company = line.stocktake_id.company_id or self.env.company
+            line.unit_cost = line.product_id.with_company(company).standard_price
 
     @api.depends('is_counted')
     def _compute_count_status(self):
@@ -412,6 +448,7 @@ class IngredientStocktakeLine(models.Model):
             return 0.0
         po_line = self.env['purchase.order.line'].sudo().search([
             ('product_id', '=', self.product_id.id),
+            ('company_id', '=', self.stocktake_id.company_id.id),
             ('order_id.state', 'in', ('purchase', 'done')),
             ('price_unit', '>', 0),
         ], order='date_order desc, id desc', limit=1)
@@ -473,11 +510,8 @@ class StocktakeCategoryWizard(models.TransientModel):
         if stocktake.state != 'draft':
             raise UserError(_('Can only load ingredients in draft state.'))
 
-        ingredients = self.env['product.product'].search([
-            ('is_ingredient', '=', True),
-            ('is_storable', '=', True),  # only tracked products have stock to count
-            ('categ_id', 'child_of', self.category_ids.ids),
-        ])
+        ingredients = self.env['product.product'].search(
+            stocktake._ingredient_domain() + [('categ_id', 'child_of', self.category_ids.ids)])
 
         existing_products = stocktake.line_ids.mapped('product_id')
         new_lines = []

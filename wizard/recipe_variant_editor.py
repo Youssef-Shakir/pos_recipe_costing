@@ -38,13 +38,29 @@ class RecipeVariantEditor(models.TransientModel):
             wiz.variants_with_recipe = len(lines.filtered('recipe_id'))
             wiz.variants_without_recipe = wiz.total_variants - wiz.variants_with_recipe
 
+    # The editor is always a saved record with saved variant lines. Unsaved lines (filled by an
+    # onchange) broke the cards: "Open Recipe" got an empty record, Odoo refused to open rows
+    # ("Please save your changes first") and saving dropped the ingredients of unopened cards.
+
     @api.model
-    def default_get(self, fields_list):
-        res = super().default_get(fields_list)
-        tmpl_id = res.get('product_tmpl_id') or self.env.context.get('default_product_tmpl_id')
-        if tmpl_id and 'variant_line_ids' in fields_list:
-            res['variant_line_ids'] = self._prepare_variant_lines(tmpl_id)
-        return res
+    def open_for_template(self, tmpl_id):
+        """The editor for one product, with its variants loaded."""
+        return self.create({'product_tmpl_id': tmpl_id}).action_load_variants()
+
+    def action_load_variants(self):
+        self.ensure_one()
+        self.variant_line_ids = [(5, 0, 0)] + self._prepare_variant_lines(self.product_tmpl_id.id)
+        return self._reopen()
+
+    def _reopen(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Edit Variant Recipes'),
+            'res_model': 'recipe.variant.editor',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
     def _prepare_variant_lines(self, tmpl_id):
         """Prepare variant lines with existing recipes pre-loaded."""
@@ -84,13 +100,6 @@ class RecipeVariantEditor(models.TransientModel):
 
         return lines
 
-    @api.onchange('product_tmpl_id')
-    def _onchange_product_tmpl_id(self):
-        if not self.product_tmpl_id:
-            self.variant_line_ids = [(5,)]
-            return
-
-        self.variant_line_ids = self._prepare_variant_lines(self.product_tmpl_id.id)
 
     def action_save_all_recipes(self):
         """Save changes to all variant recipes."""
@@ -187,13 +196,15 @@ class RecipeVariantEditorLine(models.TransientModel):
     _description = 'Variant Recipe Editor Line'
     _order = 'variant_name'
 
+    # Not readonly here: the web client does not save readonly fields of unsaved lines, so the
+    # wizard lost its variants and recipes on save. The views show them read-only with force_save.
     wizard_id = fields.Many2one('recipe.variant.editor', required=True, ondelete='cascade')
-    variant_id = fields.Many2one('product.product', string='Variant', readonly=True)
-    variant_name = fields.Char(string='Variant', readonly=True)
-    attribute_values = fields.Char(string='Attributes', readonly=True)
+    variant_id = fields.Many2one('product.product', string='Variant')
+    variant_name = fields.Char(string='Variant')
+    attribute_values = fields.Char(string='Attributes')
 
-    recipe_id = fields.Many2one('restaurant.recipe', string='Recipe', readonly=True)
-    has_recipe = fields.Boolean(string='Has Recipe', readonly=True)
+    recipe_id = fields.Many2one('restaurant.recipe', string='Recipe')
+    has_recipe = fields.Boolean(string='Has Recipe')
 
     # Editable ingredients for this variant
     ingredient_line_ids = fields.One2many(
@@ -244,12 +255,18 @@ class RecipeVariantEditorIngredient(models.TransientModel):
     uom_id = fields.Many2one('uom.uom', string='Unit', required=True)
 
     unit_cost = fields.Float(related='product_id.standard_price', string='Unit Cost')
-    cost = fields.Float(string='Cost', compute='_compute_cost', store=True)
+    cost = fields.Float(string='Cost', compute='_compute_cost')
 
-    @api.depends('quantity', 'unit_cost')
+    @api.depends('quantity', 'uom_id', 'product_id.standard_price')
+    @api.depends_context('company')
     def _compute_cost(self):
+        # Same as a recipe line: the quantity in the ingredient's own unit x its cost in this company
         for line in self:
-            line.cost = line.quantity * line.unit_cost
+            product = line.product_id
+            quantity = line.quantity
+            if line.uom_id and product.uom_id and line.uom_id != product.uom_id                     and line.uom_id.category_id == product.uom_id.category_id:
+                quantity = line.uom_id._compute_quantity(quantity, product.uom_id, round=False)
+            line.cost = quantity * product.standard_price
 
     @api.onchange('product_id')
     def _onchange_product_id(self):

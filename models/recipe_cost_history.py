@@ -56,6 +56,8 @@ class RecipeCostHistory(models.Model):
         default=lambda self: self.env.user
     )
     notes = fields.Text(string='Notes')
+    company_id = fields.Many2one('res.company', string='Company', required=True,
+                                 default=lambda self: self.env.company, index=True)
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',

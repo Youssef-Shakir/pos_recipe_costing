@@ -39,8 +39,8 @@
                     <div class="alert alert-info mb-3" role="alert" invisible="not product_tmpl_id">
                         <strong>How to use:</strong>
                         <ul class="mb-0">
-                            <li>Click on a variant row to expand and edit its ingredients</li>
-                            <li>Add/remove ingredients directly in the table</li>
+                            <li>Click a variant card to edit its ingredients</li>
+                            <li>Add/remove ingredients in the window that opens</li>
                             <li>Use "Copy Ingredients" to duplicate from one variant to others</li>
                             <li>Click "Save All Changes" when done</li>
                         </ul>
@@ -49,6 +49,9 @@
                     <!-- Action Buttons -->
                     <group invisible="not product_tmpl_id">
                         <div>
+                            <button name="action_load_variants" type="object"
+                                    string="Load Variants" class="btn-primary me-2" icon="fa-refresh"
+                                    invisible="variant_line_ids"/>
                             <button name="action_copy_from_variant" type="object"
                                     string="Copy Ingredients Between Variants"
                                     class="btn-secondary me-2"
@@ -110,31 +113,6 @@
                         </kanban>
                     </field>
 
-                    <!-- Detailed Ingredient Editor - Click a card above to edit below -->
-                    <notebook invisible="not variant_line_ids">
-                        <page string="Edit Ingredients (click card above)" name="ingredients">
-                            <div class="alert alert-secondary mb-2">
-                                <strong>Instructions:</strong> Click on a variant card above to select it,
-                                then add/edit ingredients in the form that opens.
-                                Use "Save All Changes" when done editing all variants.
-                            </div>
-                            <!-- Alternative: Show all variants in expandable sections -->
-                            <field name="variant_line_ids" nolabel="1">
-                                <list editable="bottom" open_form_view="True">
-                                    <field name="variant_name" readonly="1" string="Variant"/>
-                                    <field name="attribute_values" readonly="1" string="Attributes"/>
-                                    <field name="has_recipe" widget="boolean_toggle" readonly="1"/>
-                                    <field name="ingredient_count" readonly="1" string="# Ing."/>
-                                    <field name="total_cost" widget="monetary" readonly="1"/>
-                                    <button name="action_open_recipe" type="object"
-                                            icon="fa-external-link" title="Open Recipe"
-                                            invisible="not recipe_id" class="btn-link"/>
-                                    <field name="recipe_id" column_invisible="1"/>
-                                    <field name="variant_id" column_invisible="1"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
 
                 </sheet>
 
@@ -156,11 +134,13 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="variant_name" readonly="1"/>
-                            <field name="attribute_values" readonly="1"/>
+                            <field name="variant_id" invisible="1"/>
+                            <field name="recipe_id" invisible="1"/>
+                            <field name="variant_name" readonly="1" force_save="1"/>
+                            <field name="attribute_values" readonly="1" force_save="1"/>
                         </group>
                         <group>
-                            <field name="has_recipe" widget="boolean_toggle" readonly="1"/>
+                            <field name="has_recipe" widget="boolean_toggle" readonly="1" force_save="1"/>
                             <field name="total_cost" widget="monetary" readonly="1"/>
                         </group>
                     </group>

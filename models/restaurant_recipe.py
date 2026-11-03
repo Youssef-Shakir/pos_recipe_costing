@@ -56,20 +56,19 @@ class RestaurantRecipe(models.Model):
     )
 
     # Cost fields
+    # A recipe is shared by all companies; its costs are those of the current company
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',
-        default=lambda self: self.env.company.currency_id
+        compute='_compute_currency_id'
     )
     total_cost = fields.Float(
         string='Total Recipe Cost',
         compute='_compute_total_cost',
-        store=True
     )
     cost_per_portion = fields.Float(
         string='Cost per Portion',
         compute='_compute_costs',
-        store=True
     )
     selling_price = fields.Float(
         string='Selling Price',
@@ -78,12 +77,11 @@ class RestaurantRecipe(models.Model):
     food_cost_percentage = fields.Float(
         string='Food Cost %',
         compute='_compute_costs',
-        store=True
+        search='_search_food_cost_percentage',
     )
     profit_margin = fields.Float(
         string='Profit Margin',
         compute='_compute_costs',
-        store=True
     )
 
     # Preparation info
@@ -111,8 +109,8 @@ class RestaurantRecipe(models.Model):
         string='Cost History Count',
         compute='_compute_cost_history_count'
     )
-    # Store previous cost for tracking changes
-    _previous_cost_per_portion = fields.Float(copy=False)
+    # Store previous cost for tracking changes (per company, like the cost itself)
+    _previous_cost_per_portion = fields.Float(copy=False, company_dependent=True)
     _previous_portion_size = fields.Float(copy=False)
 
     def _compute_cost_history_count(self):
@@ -127,12 +125,19 @@ class RestaurantRecipe(models.Model):
         for recipe in self:
             recipe.ingredient_count = len(recipe.ingredient_line_ids)
 
+    @api.depends_context('company')
+    def _compute_currency_id(self):
+        for recipe in self:
+            recipe.currency_id = self.env.company.currency_id
+
     @api.depends('ingredient_line_ids.cost')
+    @api.depends_context('company')
     def _compute_total_cost(self):
         for recipe in self:
             recipe.total_cost = sum(recipe.ingredient_line_ids.mapped('cost'))
 
     @api.depends('total_cost', 'portion_size', 'selling_price')
+    @api.depends_context('company')
     def _compute_costs(self):
         for recipe in self:
             if recipe.portion_size:
@@ -146,6 +151,15 @@ class RestaurantRecipe(models.Model):
             else:
                 recipe.food_cost_percentage = 0
                 recipe.profit_margin = 0
+
+    def _search_food_cost_percentage(self, operator, value):
+        ops = {'>': float.__gt__, '>=': float.__ge__, '<': float.__lt__, '<=': float.__le__,
+               '=': float.__eq__, '!=': float.__ne__}
+        if operator not in ops:
+            raise NotImplementedError(_('Unsupported search on Food Cost %%.'))
+        recipes = self.with_context(active_test=False).search([])
+        ids = recipes.filtered(lambda r: ops[operator](float(r.food_cost_percentage), float(value or 0))).ids
+        return [('id', 'in', ids)]
 
     @api.depends('product_tmpl_id', 'product_tmpl_id.recipe_ids')
     def _compute_variant_recipes(self):
@@ -213,6 +227,7 @@ class RestaurantRecipe(models.Model):
             if float_compare(old_cost, new_cost, precision_digits=4) != 0:
                 CostHistory.create({
                     'recipe_id': record.id,
+                    'company_id': self.env.company.id,
                     'old_cost': old_cost,
                     'new_cost': new_cost,
                     'trigger': trigger,
@@ -250,6 +265,7 @@ class RestaurantRecipe(models.Model):
             if float_compare(old_cost, new_cost, precision_digits=4) != 0:
                 CostHistory.create({
                     'recipe_id': recipe.id,
+                    'company_id': self.env.company.id,
                     'old_cost': old_cost,
                     'new_cost': new_cost,
                     'trigger': 'ingredient_change',
@@ -291,6 +307,8 @@ class RestaurantRecipe(models.Model):
             'product_qty': self.portion_size or 1.0,
             'type': 'phantom',  # Kit - auto consumes on sale
             'code': f'RECIPE-{self.id}',
+            # One kit for every company that sells the product (a shared product has no company)
+            'company_id': self.product_id.company_id.id or False,
         }
 
         if self.bom_id:

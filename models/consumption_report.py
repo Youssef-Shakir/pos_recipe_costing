@@ -88,6 +88,7 @@ class ConsumptionReportWizard(models.TransientModel):
             ('date', '<=', datetime.combine(self.date_to, datetime.max.time())),
             ('state', '=', 'done'),
             ('product_id.is_ingredient', '=', True),
+            ('company_id', '=', self.env.company.id),
         ]
 
         # Filter by specific ingredients
@@ -142,7 +143,7 @@ class ConsumptionReportWizard(models.TransientModel):
                 product.uom_id
             )
             product_data[product.id]['qty_consumed'] += qty
-            product_data[product.id]['total_cost'] += abs(move.product_uom_qty * product.standard_price)
+            product_data[product.id]['total_cost'] += abs(qty * product.with_company(move.company_id).standard_price)
             product_data[product.id]['move_ids'].append(move.id)
 
             # Track source orders
@@ -186,6 +187,7 @@ class ConsumptionReportWizard(models.TransientModel):
         existing = ConsumptionLine.search([
             ('date', '>=', self.date_from),
             ('date', '<=', self.date_to),
+            ('company_id', '=', self.env.company.id),
         ])
         existing.unlink()
 

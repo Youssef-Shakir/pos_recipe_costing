@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Recipes and kits are shared by every company; what is counted, wasted or consumed
+         belongs to one company and is only seen in that company -->
+    <data noupdate="1">
+        <record id="rule_ingredient_stocktake_company" model="ir.rule">
+            <field name="name">Stocktake: own companies</field>
+            <field name="model_id" ref="model_ingredient_stocktake"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_ingredient_stocktake_line_company" model="ir.rule">
+            <field name="name">Stocktake line: own companies</field>
+            <field name="model_id" ref="model_ingredient_stocktake_line"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_ingredient_waste_company" model="ir.rule">
+            <field name="name">Waste: own companies</field>
+            <field name="model_id" ref="model_ingredient_waste"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_ingredient_consumption_line_company" model="ir.rule">
+            <field name="name">Consumption: own companies</field>
+            <field name="model_id" ref="model_ingredient_consumption_line"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_ingredient_cost_history_company" model="ir.rule">
+            <field name="name">Ingredient cost history: own companies</field>
+            <field name="model_id" ref="model_ingredient_cost_history"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+        <record id="rule_recipe_cost_history_company" model="ir.rule">
+            <field name="name">Recipe cost history: own companies</field>
+            <field name="model_id" ref="model_recipe_cost_history"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>

@@ -315,75 +315,75 @@
         </t>
     </template>
 
-    <!-- Simple Kitchen Card Report (Alternative Layout) -->
+    <!-- Simple Kitchen Card Report (Alternative Layout)
+         web.basic_layout gives the page its <main>/article and UTF-8 head: without it wkhtmltopdf
+         printed the Arabic as Latin-1 garbage. Tables, not flex: wkhtmltopdf's WebKit has no flexbox. -->
     <template id="report_variant_recipes_kitchen">
         <t t-call="web.html_container">
-            <t t-foreach="docs" t-as="product_tmpl">
-                <t t-foreach="product_tmpl.recipe_ids" t-as="recipe">
-                    <div class="page" style="font-family: Arial, sans-serif; padding: 20px;">
-                        <!-- Large Header for Kitchen -->
-                        <div style="text-align: center; border: 3px solid #000; padding: 15px; margin-bottom: 20px;">
-                            <h1 style="font-size: 32pt; margin: 0; font-weight: bold; text-transform: uppercase;">
-                                <t t-esc="recipe.product_id.name"/>
-                            </h1>
-                            <t t-set="attrs" t-value="recipe.product_id.product_template_attribute_value_ids"/>
-                            <t t-if="attrs">
-                                <div style="margin-top: 10px;">
-                                    <t t-foreach="attrs" t-as="attr">
-                                        <span style="background: #000; color: #fff; padding: 5px 15px; font-size: 14pt; margin: 0 5px; display: inline-block;">
-                                            <t t-esc="attr.name"/>
-                                        </span>
-                                    </t>
-                                </div>
-                            </t>
-                        </div>
+            <t t-call="web.basic_layout">
+                <t t-foreach="docs" t-as="product_tmpl">
+                    <t t-foreach="product_tmpl.recipe_ids.sorted(lambda r: r.product_id.display_name)" t-as="recipe">
+                        <div class="page" dir="rtl" style="font-family: Arial, 'DejaVu Sans', sans-serif; padding: 10px 20px; page-break-after: always;">
+                            <!-- Large Header for Kitchen -->
+                            <div style="text-align: center; border: 3px solid #000; padding: 15px; margin-bottom: 20px;">
+                                <h1 style="font-size: 30pt; margin: 0; font-weight: bold;">
+                                    <t t-esc="recipe.product_id.name"/>
+                                </h1>
+                                <t t-set="attrs" t-value="recipe.product_id.product_template_attribute_value_ids"/>
+                                <t t-if="attrs">
+                                    <div style="margin-top: 10px;">
+                                        <t t-foreach="attrs" t-as="attr">
+                                            <span style="background: #000; color: #fff; padding: 5px 15px; font-size: 16pt; margin: 0 5px; display: inline-block;">
+                                                <t t-esc="attr.name"/>
+                                            </span>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
 
-                        <!-- Large Ingredient List -->
-                        <table style="width: 100%; font-size: 16pt; border-collapse: collapse;">
-                            <t t-foreach="recipe.ingredient_line_ids" t-as="line">
-                                <tr style="border-bottom: 2px solid #333;">
-                                    <td style="padding: 15px 10px; font-weight: bold; width: 60%;">
-                                        <t t-esc="line.product_id.name"/>
-                                    </td>
-                                    <td style="padding: 15px 10px; text-align: right; font-size: 20pt; font-weight: bold; width: 20%;">
-                                        <t t-esc="'%.2f' % line.quantity"/>
-                                    </td>
-                                    <td style="padding: 15px 10px; font-size: 14pt; width: 20%;">
-                                        <t t-esc="line.uom_id.name"/>
-                                    </td>
+                            <!-- Large Ingredient List -->
+                            <table style="width: 100%; font-size: 18pt; border-collapse: collapse;">
+                                <t t-foreach="recipe.ingredient_line_ids" t-as="line">
+                                    <tr style="border-bottom: 2px solid #333; page-break-inside: avoid;">
+                                        <td style="padding: 14px 10px; font-weight: bold; width: 60%; text-align: right;">
+                                            <t t-esc="line.product_id.name"/>
+                                        </td>
+                                        <td style="padding: 14px 10px; text-align: left; font-size: 22pt; font-weight: bold; width: 22%;" dir="ltr">
+                                            <t t-esc="'%g' % round(line.quantity, 3)"/>
+                                        </td>
+                                        <td style="padding: 14px 10px; font-size: 16pt; width: 18%; text-align: left;" dir="ltr">
+                                            <t t-esc="line.uom_id.name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="not recipe.ingredient_line_ids">
+                                    <td style="padding: 14px 10px; color: #888;">No ingredients / لا توجد مكونات</td>
                                 </tr>
-                            </t>
-                        </table>
+                            </table>
 
-                        <!-- Cost Footer -->
-                        <div style="margin-top: 20px; background: #f5f5f5; padding: 15px; display: flex; border: 2px solid #333;">
-                            <div style="flex: 1; text-align: center;">
-                                <div style="font-size: 10pt; text-transform: uppercase;">Cost</div>
-                                <div style="font-size: 18pt; font-weight: bold;">
-                                    <t t-esc="'%.2f' % recipe.cost_per_portion"/> <t t-esc="recipe.currency_id.symbol"/>
-                                </div>
-                            </div>
-                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
-                                <div style="font-size: 10pt; text-transform: uppercase;">Price</div>
-                                <div style="font-size: 18pt; font-weight: bold;">
-                                    <t t-esc="'%.2f' % recipe.selling_price"/> <t t-esc="recipe.currency_id.symbol"/>
-                                </div>
-                            </div>
-                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
-                                <div style="font-size: 10pt; text-transform: uppercase;">Food Cost %</div>
-                                <t t-set="fcp" t-value="recipe.food_cost_percentage"/>
-                                <div t-attf-style="font-size: 18pt; font-weight: bold; color: #{fcp > 35 and '#dc3545' or (fcp > 30 and '#ffc107' or '#28a745')};">
-                                    <t t-esc="'%.1f' % fcp"/>%
-                                </div>
-                            </div>
-                            <div style="flex: 1; text-align: center; border-left: 2px solid #333;">
-                                <div style="font-size: 10pt; text-transform: uppercase;">Portions</div>
-                                <div style="font-size: 18pt; font-weight: bold;">
-                                    <t t-esc="recipe.portion_size"/>
-                                </div>
-                            </div>
+                            <t t-if="recipe.instructions">
+                                <div style="margin-top: 16px; font-size: 14pt;" t-field="recipe.instructions"/>
+                            </t>
+
+                            <!-- Cost Footer -->
+                            <t t-set="fcp" t-value="recipe.food_cost_percentage"/>
+                            <table style="width: 100%; margin-top: 20px; background: #f5f5f5; border: 2px solid #333; border-collapse: collapse; page-break-inside: avoid;" dir="ltr">
+                                <tr style="font-size: 10pt; text-transform: uppercase; text-align: center;">
+                                    <td style="padding: 8px 4px 0; width: 25%;">Cost / الكلفة</td>
+                                    <td style="padding: 8px 4px 0; width: 25%; border-left: 2px solid #333;">Price / السعر</td>
+                                    <td style="padding: 8px 4px 0; width: 25%; border-left: 2px solid #333;">Food Cost %</td>
+                                    <td style="padding: 8px 4px 0; width: 25%; border-left: 2px solid #333;">Portions / الحصص</td>
+                                </tr>
+                                <tr style="font-size: 18pt; font-weight: bold; text-align: center;">
+                                    <td style="padding: 4px 4px 10px;"><t t-esc="'{:,.0f}'.format(recipe.cost_per_portion)"/> <t t-esc="recipe.currency_id.symbol"/></td>
+                                    <td style="padding: 4px 4px 10px; border-left: 2px solid #333;"><t t-esc="'{:,.0f}'.format(recipe.selling_price)"/> <t t-esc="recipe.currency_id.symbol"/></td>
+                                    <td t-attf-style="padding: 4px 4px 10px; border-left: 2px solid #333; color: #{fcp &gt; 35 and '#dc3545' or (fcp &gt; 30 and '#b8860b' or '#28a745')};">
+                                        <t t-esc="'%.1f' % fcp"/>%</td>
+                                    <td style="padding: 4px 4px 10px; border-left: 2px solid #333;"><t t-esc="'%g' % recipe.portion_size"/></td>
+                                </tr>
+                            </table>
                         </div>
-                    </div>
+                    </t>
                 </t>
             </t>
         </t>

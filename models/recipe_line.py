@@ -37,10 +37,12 @@ class RecipeIngredientLine(models.Model):
     )
 
     # Cost fields
+    # Costs are per company: an ingredient's cost (standard_price) differs between companies,
+    # so they are computed for the current company and not stored
     unit_cost = fields.Float(
         string='Unit Cost',
-        related='product_id.standard_price',
-        readonly=True
+        compute='_compute_cost',
+        help="Cost of one unit of the ingredient (its own unit) in the current company"
     )
     currency_id = fields.Many2one(
         related='recipe_id.currency_id',
@@ -49,7 +51,6 @@ class RecipeIngredientLine(models.Model):
     cost = fields.Float(
         string='Cost',
         compute='_compute_cost',
-        store=True
     )
 
     # Stock tracking
@@ -59,10 +60,18 @@ class RecipeIngredientLine(models.Model):
         readonly=True
     )
 
-    @api.depends('quantity', 'unit_cost', 'product_id.standard_price')
+    @api.depends('quantity', 'uom_id', 'product_id.standard_price', 'product_id.uom_id')
+    @api.depends_context('company')
     def _compute_cost(self):
         for line in self:
-            line.cost = line.quantity * line.unit_cost
+            product = line.product_id
+            line.unit_cost = product.standard_price
+            quantity = line.quantity
+            # A line in kg for an ingredient stocked (and costed) in g
+            if line.uom_id and product.uom_id and line.uom_id != product.uom_id \
+                    and line.uom_id.category_id == product.uom_id.category_id:
+                quantity = line.uom_id._compute_quantity(quantity, product.uom_id, round=False)
+            line.cost = quantity * product.standard_price
 
     @api.onchange('product_id')
     def _onchange_product_id(self):

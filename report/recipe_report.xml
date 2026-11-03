@@ -21,40 +21,44 @@
                         <small class="text-muted"><t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/></small>
                     </div>
 
-                    <div class="row" style="font-size: 9pt;">
-                        <t t-set="recipes_list" t-value="docs"/>
-                        <t t-set="col_size" t-value="(len(recipes_list) + 1) // 2"/>
-
-                        <t t-foreach="[recipes_list[:col_size], recipes_list[col_size:]]" t-as="column_recipes">
-                            <div class="col-6" style="padding: 0 8px;">
-                                <t t-foreach="column_recipes" t-as="recipe">
-                                    <div style="border: 1px solid #ddd; border-radius: 5px; padding: 6px 8px; margin-bottom: 6px; page-break-inside: avoid;">
+                    <!-- Rows of two cards, so both columns fill together (two halves left one side empty
+                         when the short recipes came first). Cards are right-to-left: Arabic names with
+                         brackets, e.g. "اركيلة انكليزي (الماني)", printed reversed in a left-to-right page. -->
+                    <t t-set="recipes_list" t-value="docs.sorted(lambda r: r.name or '')"/>
+                    <table style="width: 100%; font-size: 9pt; border-collapse: separate; border-spacing: 8px 6px;">
+                        <t t-foreach="range(0, len(recipes_list), 2)" t-as="row_start">
+                            <tr style="page-break-inside: avoid;">
+                                <t t-foreach="recipes_list[row_start:row_start + 2]" t-as="recipe">
+                                    <td dir="rtl" style="width: 50%; vertical-align: top; border: 1px solid #ddd; border-radius: 5px; padding: 6px 8px; text-align: right;">
                                         <div style="border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 4px;">
                                             <strong style="font-size: 10pt;"><t t-esc="recipe.name"/></strong>
                                             <t t-if="recipe.product_id.list_price">
-                                                <span class="float-end text-muted" style="font-size: 8pt;">
-                                                    <t t-esc="'%.2f' % recipe.product_id.list_price"/> <t t-esc="recipe.currency_id.symbol"/>
+                                                <span class="text-muted" style="float: left; font-size: 8pt;" dir="ltr">
+                                                    <t t-esc="'{:,.0f}'.format(recipe.product_id.list_price)"/> <t t-esc="recipe.currency_id.symbol"/>
                                                 </span>
                                             </t>
                                         </div>
                                         <t t-if="recipe.ingredient_line_ids">
-                                            <ul style="margin: 0; padding-left: 15px; font-size: 8pt; line-height: 1.4;">
+                                            <table style="width: 100%; font-size: 8pt; line-height: 1.4;">
                                                 <t t-foreach="recipe.ingredient_line_ids" t-as="line">
-                                                    <li>
-                                                        <t t-esc="'%.2f' % line.quantity"/> <t t-esc="line.uom_id.name"/>
-                                                        <t t-esc="line.product_id.name"/>
-                                                    </li>
+                                                    <tr>
+                                                        <td style="text-align: right;"><t t-esc="line.product_id.name"/></td>
+                                                        <td style="text-align: left; white-space: nowrap; width: 30%;" dir="ltr">
+                                                            <t t-esc="'%g' % round(line.quantity, 3)"/> <t t-esc="line.uom_id.name"/>
+                                                        </td>
+                                                    </tr>
                                                 </t>
-                                            </ul>
+                                            </table>
                                         </t>
                                         <t t-else="">
-                                            <span class="text-muted" style="font-size: 8pt;">No ingredients</span>
+                                            <span class="text-muted" style="font-size: 8pt;">No ingredients / لا توجد مكونات</span>
                                         </t>
-                                    </div>
+                                    </td>
                                 </t>
-                            </div>
+                                <td t-if="row_start + 1 &gt;= len(recipes_list)" style="width: 50%;"/>
+                            </tr>
                         </t>
-                    </div>
+                    </table>
                 </div>
             </t>
         </t>

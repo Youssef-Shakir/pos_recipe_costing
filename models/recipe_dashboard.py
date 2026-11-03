@@ -46,7 +46,10 @@ class RecipeDashboard(models.Model):
     reorder_last_computed = fields.Datetime(compute='_compute_reorder_stats', string='Reorder Points Recalculated')
 
     def _compute_reorder_stats(self):
-        ingredients = self.env['product.product'].search([('is_ingredient', '=', True), ('is_storable', '=', True)])
+        # This company's stock and levels, even with several companies selected
+        Product = self.env['product.product'].with_context(allowed_company_ids=self.env.company.ids)
+        ingredients = Product.search([('is_ingredient', '=', True), ('is_storable', '=', True),
+                                      ('company_id', 'in', [False, self.env.company.id])])
         tracked = ingredients.filtered(lambda p: p.reorder_point > 0)
         needed = tracked.filtered('reorder_needed')
         dates = [d for d in ingredients.mapped('reorder_computed_on') if d]
@@ -128,24 +131,29 @@ class RecipeDashboard(models.Model):
         from datetime import date, datetime
         first_of_month = date.today().replace(day=1)
         first_of_month_dt = datetime.combine(first_of_month, datetime.min.time())
+        company = self.env.company  # the dashboard shows the current company
         waste_records = Waste.search([
             ('state', '=', 'confirmed'),
-            ('date', '>=', first_of_month)
+            ('date', '>=', first_of_month),
+            ('company_id', '=', company.id),
         ])
         waste_total_value = sum(waste_records.mapped('cost'))
 
         # Consumption statistics (this month)
         consumption_lines = ConsumptionLine.search([
-            ('date', '>=', first_of_month)
+            ('date', '>=', first_of_month),
+            ('company_id', '=', company.id),
         ])
         consumption_total_value = sum(consumption_lines.mapped('cost'))
 
         # Cost history statistics (this month)
         ingredient_cost_changes = IngredientCostHistory.search([
-            ('change_date', '>=', first_of_month_dt)
+            ('change_date', '>=', first_of_month_dt),
+            ('company_id', '=', company.id),
         ])
         recipe_cost_changes = RecipeCostHistory.search([
-            ('change_date', '>=', first_of_month_dt)
+            ('change_date', '>=', first_of_month_dt),
+            ('company_id', '=', company.id),
         ])
 
         # Calculate average price increase (only positive changes)

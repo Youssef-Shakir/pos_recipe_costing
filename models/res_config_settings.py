@@ -13,18 +13,14 @@ class ResConfigSettings(models.TransientModel):
         help="Default product category for ingredients"
     )
     recipe_ingredient_account_expense_id = fields.Many2one(
-        'account.account',
-        string='Expense Account (COGS)',
-        config_parameter='pos_recipe_costing.ingredient_expense_account_id',
-        domain="[('account_type', 'in', ['expense', 'expense_direct_cost'])]",
-        help="Default expense account (COGS) for ingredients"
+        related='company_id.recipe_ingredient_expense_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id), ('account_type', 'in', ['expense', 'expense_direct_cost'])]",
+        help="Default expense account (COGS) for ingredients, for this company"
     )
     recipe_ingredient_account_stock_valuation_id = fields.Many2one(
-        'account.account',
-        string='Stock Valuation Account',
-        config_parameter='pos_recipe_costing.ingredient_stock_valuation_id',
-        domain="[('account_type', '=', 'asset_current')]",
-        help="Default stock valuation account for ingredients"
+        related='company_id.recipe_ingredient_valuation_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id), ('account_type', '=', 'asset_current')]",
+        help="Default stock valuation account for ingredients, for this company"
     )
     recipe_ingredient_pos_category_id = fields.Many2one(
         'pos.category',
@@ -41,11 +37,9 @@ class ResConfigSettings(models.TransientModel):
         help="Default product category for menu items (final products)"
     )
     recipe_product_account_income_id = fields.Many2one(
-        'account.account',
-        string='Income Account',
-        config_parameter='pos_recipe_costing.product_income_account_id',
-        domain="[('account_type', '=', 'income')]",
-        help="Default income account for menu items"
+        related='company_id.recipe_product_income_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id), ('account_type', '=', 'income')]",
+        help="Default income account for menu items, for this company"
     )
     recipe_pos_category_id = fields.Many2one(
         'pos.category',
@@ -62,18 +56,16 @@ class ResConfigSettings(models.TransientModel):
         help="Recipes above this food cost % will be flagged"
     )
 
-    # Stocktake Settings
+    # Stocktake Settings (accounts are per company)
     stocktake_gain_account_id = fields.Many2one(
-        'account.account',
-        string='Inventory Gain Account',
-        config_parameter='pos_recipe_costing.stocktake_gain_account_id',
-        help="Account for inventory gains (when counted > system)"
+        related='company_id.recipe_stocktake_gain_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id)]",
+        help="Account for inventory gains (when counted > system), for this company"
     )
     stocktake_loss_account_id = fields.Many2one(
-        'account.account',
-        string='Inventory Loss Account',
-        config_parameter='pos_recipe_costing.stocktake_loss_account_id',
-        help="Account for inventory losses (when counted < system)"
+        related='company_id.recipe_stocktake_loss_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id)]",
+        help="Account for inventory losses (when counted < system), for this company"
     )
 
     # Stocktake checks before validation
@@ -92,11 +84,9 @@ class ResConfigSettings(models.TransientModel):
 
     # Waste Tracking Settings
     waste_account_id = fields.Many2one(
-        'account.account',
-        string='Waste Expense Account',
-        config_parameter='pos_recipe_costing.waste_account_id',
-        domain="[('account_type', 'in', ['expense', 'expense_direct_cost'])]",
-        help="Account for recording ingredient waste expenses (expired, spoiled, damaged)"
+        related='company_id.recipe_waste_account_id', readonly=False,
+        domain="[('company_ids', 'in', company_id), ('account_type', 'in', ['expense', 'expense_direct_cost'])]",
+        help="Account for recording ingredient waste expenses (expired, spoiled, damaged), for this company"
     )
 
     # Reorder points (Order Now)
@@ -121,6 +111,6 @@ class ResConfigSettings(models.TransientModel):
 
     def set_values(self):
         super().set_values()
-        self.env['product.product'].browse()._recipe_compute_reorder()
+        self.env['product.product']._cron_recipe_compute_reorder()
         # Odoo posts count differences and waste on these locations' accounts
-        self.env['stock.location']._recipe_sync_adjustment_accounts()
+        self.env['stock.location']._recipe_sync_adjustment_accounts(self.company_id)

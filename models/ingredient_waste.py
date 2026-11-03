@@ -54,9 +54,10 @@ class IngredientWaste(models.Model):
     # Cost fields
     unit_cost = fields.Float(
         string='Unit Cost',
-        related='product_id.standard_price',
+        compute='_compute_unit_cost',
         store=True,
-        readonly=True
+        readonly=True,
+        help="The ingredient's cost in the waste record's company"
     )
     cost = fields.Monetary(
         string='Total Cost',
@@ -115,12 +116,14 @@ class IngredientWaste(models.Model):
 
     @api.model
     def _default_waste_account(self):
-        """Get default waste account from settings"""
-        ICP = self.env['ir.config_parameter'].sudo()
-        account_id = ICP.get_param('pos_recipe_costing.waste_account_id')
-        if account_id:
-            return int(account_id)
-        return False
+        """The waste account of the current company (Settings)"""
+        return self.env.company.recipe_waste_account_id
+
+    @api.depends('product_id', 'company_id')
+    def _compute_unit_cost(self):
+        for record in self:
+            company = record.company_id or self.env.company
+            record.unit_cost = record.product_id.with_company(company).standard_price
 
     @api.depends('quantity', 'unit_cost')
     def _compute_cost(self):
@@ -145,7 +148,7 @@ class IngredientWaste(models.Model):
 
         # One posting, made by Odoo: the scrap moves the stock to the Scrap location,
         # whose accounts (set from Settings) receive the waste expense
-        self._create_stock_adjustment()
+        self.with_company(self.company_id)._create_stock_adjustment()
 
         self.state = 'confirmed'
         return True
@@ -180,15 +183,9 @@ class IngredientWaste(models.Model):
         ], limit=1)
 
         if not scrap_location:
-            # Try to find any scrap location
-            scrap_location = self.env['stock.location'].search([
-                ('scrap_location', '=', True)
-            ], limit=1)
-
-        if not scrap_location:
             raise UserError(_('No scrap location found. Please configure a scrap location.'))
 
-        self.env['stock.location']._recipe_sync_adjustment_accounts()
+        self.env['stock.location']._recipe_sync_adjustment_accounts(self.company_id)
         if not scrap_location.valuation_in_account_id:
             raise UserError(_('Set the Waste Expense Account in Settings › Recipe Costing › Waste Tracking. '
                               'It is used for the location "%s".', scrap_location.complete_name))

@@ -54,7 +54,8 @@ class ProductTemplate(models.Model):
     )
     food_cost_percentage = fields.Float(
         string='Food Cost %',
-        compute='_compute_food_cost'
+        compute='_compute_food_cost',
+        search='_search_food_cost_percentage'
     )
     profit_margin = fields.Float(
         string='Profit Margin',
@@ -132,8 +133,13 @@ class ProductTemplate(models.Model):
                 r.recipe_type == 'component' for r in product.recipe_ids
             )
 
+    def _search_food_cost_percentage(self, operator, value):
+        recipes = self.env['restaurant.recipe'].search([('food_cost_percentage', operator, value)])
+        return [('id', 'in', recipes.product_tmpl_id.ids)]
+
     @api.depends('recipe_ids.cost_per_portion', 'recipe_ids.food_cost_percentage',
                  'recipe_ids.profit_margin', 'list_price')
+    @api.depends_context('company')
     def _compute_food_cost(self):
         for product in self:
             recipe = product.recipe_ids[:1]
@@ -210,14 +216,7 @@ class ProductTemplate(models.Model):
     def action_open_variant_recipe_editor(self):
         """Open the variant recipe editor wizard."""
         self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Edit Variant Recipes'),
-            'res_model': 'recipe.variant.editor',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_product_tmpl_id': self.id},
-        }
+        return self.env['recipe.variant.editor'].open_for_template(self.id)
 
     def action_print_variant_recipes(self):
         """Print variant recipe comparison report."""
@@ -382,6 +381,7 @@ class ProductProduct(models.Model):
 
                     CostHistory.create({
                         'product_id': product.id,
+                        'company_id': self.env.company.id,
                         'old_cost': old_cost,
                         'new_cost': new_cost,
                         'reason': reason,

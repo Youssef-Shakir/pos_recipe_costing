@@ -119,7 +119,7 @@
                 <filter name="filter_today" string="Today"
                         domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter name="filter_this_week" string="This Week"
-                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=6)).strftime('%Y-%m-%d'))]"/>
                 <filter name="filter_this_month" string="This Month"
                         domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
                 <filter name="filter_last_30_days" string="Last 30 Days"

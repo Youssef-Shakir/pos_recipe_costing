@@ -65,7 +65,7 @@
                             <field name="total_cost" widget="monetary"/>
                             <field name="cost_per_portion" widget="monetary"/>
                             <field name="selling_price" widget="monetary"/>
-                            <field name="food_cost_percentage" widget="percentage"/>
+                            <field name="food_cost_percentage" digits="[16, 1]"/>
                             <field name="profit_margin" widget="monetary"/>
                         </group>
                     </group>
@@ -126,7 +126,7 @@
                                     <field name="total_cost" widget="monetary"/>
                                     <field name="cost_per_portion" widget="monetary"/>
                                     <field name="selling_price" widget="monetary"/>
-                                    <field name="food_cost_percentage" widget="percentage"/>
+                                    <field name="food_cost_percentage" digits="[16, 1]"/>
                                     <field name="bom_id" string="BOM" optional="show"/>
                                     <field name="currency_id" column_invisible="1"/>
                                 </list>
@@ -156,7 +156,7 @@
                 <field name="total_cost" widget="monetary"/>
                 <field name="cost_per_portion" widget="monetary"/>
                 <field name="selling_price" widget="monetary"/>
-                <field name="food_cost_percentage" widget="percentage"/>
+                <field name="food_cost_percentage" digits="[16, 1]"/>
                 <field name="profit_margin" widget="monetary"/>
                 <field name="currency_id" column_invisible="1"/>
             </list>

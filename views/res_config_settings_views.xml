@@ -46,10 +46,10 @@
                         </setting>
                     </block>
                     <block title="Stocktake Accounts / حسابات الجرد" name="stocktake_accounts">
-                        <setting string="Inventory Gain Account / حساب أرباح المخزون" help="Surpluses (counted > system). Saved on the location Virtual Locations/Inventory adjustment (Outgoing), so Odoo posts every count difference here directly.">
+                        <setting string="Inventory Gain Account / حساب أرباح المخزون" help="This company only. Surpluses (counted > system). Saved on this company's location Virtual Locations/Inventory adjustment (Outgoing), so Odoo posts every count difference here directly.">
                             <field name="stocktake_gain_account_id"/>
                         </setting>
-                        <setting string="Inventory Loss Account / حساب خسائر المخزون" help="Shortages (counted &lt; system). Saved on the location Virtual Locations/Inventory adjustment (Incoming).">
+                        <setting string="Inventory Loss Account / حساب خسائر المخزون" help="This company only. Shortages (counted &lt; system). Saved on this company's location Virtual Locations/Inventory adjustment (Incoming).">
                             <field name="stocktake_loss_account_id"/>
                         </setting>
                         <setting string="Check: max value per ingredient / الحد الأعلى لقيمة المادة" help="Validating a stocktake warns when one ingredient's value or difference is above this amount.">
@@ -71,7 +71,7 @@
                         </setting>
                     </block>
                     <block title="Waste Tracking / تتبع الهدر" name="waste_tracking">
-                        <setting string="Waste Expense Account / حساب مصروفات الهدر" help="Saved on the location Virtual Locations/Scrap, so Odoo posts waste (scrap) here directly.">
+                        <setting string="Waste Expense Account / حساب مصروفات الهدر" help="This company only. Saved on this company's location Virtual Locations/Scrap, so Odoo posts waste (scrap) here directly.">
                             <field name="waste_account_id"/>
                         </setting>
                     </block>

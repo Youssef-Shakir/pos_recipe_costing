@@ -5,17 +5,22 @@ from odoo import api, fields, models, _
 from odoo.tools import float_round
 
 # Consumption = stock that left the shop (POS sales, waste/scrap, stocktake shortages)
-# minus what came back (POS returns, stocktake surpluses). Receipts and manufacturing output are supply, not use.
+# minus what came back (POS returns, surpluses found by a Recipe stocktake). Receipts and manufacturing
+# output are supply, not use; so is stock added by hand (opening stock, quantity updates), which would
+# otherwise cancel weeks of sales.
 CONSUMPTION_SQL = """
     SELECT m.product_id,
            SUM(CASE WHEN ls.usage = 'internal' AND ld.usage IN ('customer', 'inventory') THEN m.product_qty
-                    WHEN ld.usage = 'internal' AND ls.usage IN ('customer', 'inventory') THEN -m.product_qty
+                    WHEN ld.usage = 'internal' AND ls.usage = 'customer' THEN -m.product_qty
+                    WHEN ld.usage = 'internal' AND ls.usage = 'inventory' AND EXISTS (
+                         SELECT 1 FROM ingredient_stocktake_stock_move_rel r WHERE r.stock_move_id = m.id)
+                         THEN -m.product_qty
                     ELSE 0 END),
            MIN(m.date)
       FROM stock_move m
       JOIN stock_location ls ON ls.id = m.location_id
       JOIN stock_location ld ON ld.id = m.location_dest_id
-     WHERE m.state = 'done' AND m.product_id IN %s AND m.date >= %s
+     WHERE m.state = 'done' AND m.product_id IN %s AND m.date >= %s AND m.company_id = %s
      GROUP BY m.product_id
 """
 
@@ -23,33 +28,43 @@ CONSUMPTION_SQL = """
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
+    # Every reorder value is per company (company_dependent): each company has its own stock,
+    # consumption and levels for a shared ingredient. Everything runs in the current company.
+
     reorder_mode = fields.Selection([
         ('auto', 'Auto'),
         ('manual', 'Manual'),
-    ], string='Reorder Mode', default='auto', copy=False,
+    ], string='Reorder Mode', default='auto', copy=False, company_dependent=True,
         help="Auto: the reorder point and fill-up level are recalculated every day from consumption.\n"
              "Manual: set by hand and kept; the suggested values are still shown.")
     reorder_cover_days = fields.Float(
+        company_dependent=True,
         string='Reorder at (days)',
         help="Order when stock covers fewer days than this. 0 = the default in Recipe Settings.")
     reorder_fill_days = fields.Float(
+        company_dependent=True,
         string='Fill up to (days)',
         help="How many days of use an order should bring stock up to. 0 = the default in Recipe Settings.")
     reorder_avg_daily = fields.Float(
+        company_dependent=True,
         string='Avg Daily Use', digits='Product Unit of Measure', readonly=True, copy=False,
         help="Average daily consumption over the history window (POS sales + waste + stocktake differences).")
     reorder_auto_point = fields.Float(
+        company_dependent=True,
         string='Suggested Reorder Point', digits='Product Unit of Measure', readonly=True, copy=False)
     reorder_auto_max = fields.Float(
+        company_dependent=True,
         string='Suggested Fill-up Level', digits='Product Unit of Measure', readonly=True, copy=False)
     reorder_point = fields.Float(
+        company_dependent=True,
         string='Reorder Point', digits='Product Unit of Measure', copy=False,
         help="When stock on hand is at or below this, the ingredient goes on the Order Now list. "
              "Editing it switches the ingredient to Manual.")
     reorder_max_qty = fields.Float(
+        company_dependent=True,
         string='Fill-up Level', digits='Product Unit of Measure', copy=False,
         help="Order Now suggests ordering up to this quantity. Editing it switches the ingredient to Manual.")
-    reorder_computed_on = fields.Datetime(string='Recalculated On', readonly=True, copy=False)
+    reorder_computed_on = fields.Datetime(string='Recalculated On', readonly=True, copy=False, company_dependent=True)
 
     reorder_needed = fields.Boolean(
         string='Order Now', compute='_compute_reorder_status', search='_search_reorder_needed')
@@ -63,11 +78,17 @@ class ProductProduct(models.Model):
     reorder_vendor_id = fields.Many2one(
         'res.partner', string='Vendor', compute='_compute_reorder_status')
 
+    def _reorder_company_env(self):
+        """This company's stock only, even when the user has several companies selected."""
+        return self.with_context(allowed_company_ids=self.env.company.ids)
+
     @api.depends('qty_available', 'reorder_point', 'reorder_max_qty', 'reorder_avg_daily')
+    @api.depends_context('company', 'allowed_company_ids')
     def _compute_reorder_status(self):
+        on_hand_by_id = {p.id: p.qty_available for p in self._reorder_company_env()}
         for product in self:
             # Negative stock is a recording error, not stock owed: order as if empty
-            on_hand = max(product.qty_available, 0.0)
+            on_hand = max(on_hand_by_id.get(product.id, 0.0), 0.0)
             needed = product.reorder_point > 0 and on_hand <= product.reorder_point
             qty = max(product.reorder_max_qty - on_hand, 0.0) if needed else 0.0
             product.reorder_needed = needed
@@ -84,7 +105,8 @@ class ProductProduct(models.Model):
     def _search_reorder_needed(self, operator, value):
         if operator not in ('=', '!=') or not isinstance(value, bool):
             raise NotImplementedError(_('Unsupported search on Order Now.'))
-        candidates = self.search([('is_ingredient', '=', True), ('reorder_point', '>', 0)])
+        candidates = self.search([('is_ingredient', '=', True), ('reorder_point', '>', 0),
+                                  ('company_id', 'in', [False, self.env.company.id])])
         ids = candidates.filtered('reorder_needed').ids
         return [('id', 'in' if (operator == '=') == value else 'not in', ids)]
 
@@ -110,8 +132,10 @@ class ProductProduct(models.Model):
     def _recipe_compute_reorder(self):
         """Recalculate average use and the suggested levels; Auto ingredients also get them as their levels.
         With an empty recordset, every storable ingredient is recalculated."""
+        company = self.env.company
         products = self or self.search([('is_ingredient', '=', True), ('is_storable', '=', True)])
-        products = products.filtered(lambda p: p.is_ingredient and p.is_storable)
+        products = products.filtered(lambda p: p.is_ingredient and p.is_storable
+                                     and p.company_id in (company, self.env['res.company']))
         if not products:
             return True
         settings = self._reorder_settings()
@@ -119,7 +143,7 @@ class ProductProduct(models.Model):
         since = now - timedelta(days=settings['history_days'])
         self.env['stock.move'].flush_model(['state', 'product_id', 'product_qty', 'date',
                                             'location_id', 'location_dest_id'])
-        self.env.cr.execute(CONSUMPTION_SQL, (tuple(products.ids), since))
+        self.env.cr.execute(CONSUMPTION_SQL, (tuple(products.ids), since, company.id))
         usage = {pid: (qty or 0.0, first) for pid, qty, first in self.env.cr.fetchall()}
         for product in products:
             qty, first = usage.get(product.id, (0.0, None))
@@ -144,7 +168,10 @@ class ProductProduct(models.Model):
 
     @api.model
     def _cron_recipe_compute_reorder(self):
-        self.browse()._recipe_compute_reorder()
+        """Every company, each with its own consumption."""
+        for company in self.env['res.company'].sudo().search([]):
+            self.with_company(company).with_context(allowed_company_ids=company.ids).browse()._recipe_compute_reorder()
+        return True
 
     def action_reorder_set_auto(self):
         self.write({'reorder_mode': 'auto'})
@@ -168,6 +195,7 @@ class ProductProduct(models.Model):
     def get_order_now_list(self):
         """The Order Now list as plain data, for Telegram and the DoniaLink connector.
         Ingredients at or below their reorder point, grouped by vendor, most urgent first."""
+        self = self._reorder_company_env()
         settings = self._reorder_settings()
         products = self.search([('is_ingredient', '=', True), ('reorder_needed', '=', True)])
         items = []
